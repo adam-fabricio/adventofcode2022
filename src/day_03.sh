@@ -7,17 +7,13 @@ test -z "$1" && echo "Erro!"  && exit 1
 #-------------------------------Variaveis-------------------------------------#
 line_number=1
 sum_priorities=0
-#---------------------------Commun Character----------------------------------#
-commun_character() {
-	echo $# $*
-	[ "$#" -ne "2" ] && echo "Apenas dois parãmetros" && exit 1
-	for (( position=0; position<${#1}; position++ ))
-	do
-		echo $position
-	done
+sum_budge=0
+#---------------------------Char to ASCI---I----------------------------------#
+char_to_asc() {
+	asc=$(printf '%d' \'"$1")
+	[ "$asc" -gt 95 ] && let val=$asc-96 || let val=asc-38
+	echo $val
 }
-
-commun_character "adam" "fabricio"
 #-----------------------------------------------------------------------------#
 while read line
 do
@@ -27,13 +23,7 @@ do
 	do
 		if [[ "${line:$half_line}" == *"${line:$position:1}"* ]] 
 		then
-			ascii_char=$(printf '%d' \'"${line:$position:1}")
-			if [ "$ascii_char" -gt 95 ]
-			then
-				let priority=$ascii_char-96
-			else
-				let priority=$ascii_char-64+26
-			fi
+			priority=$(char_to_asc "${line:$position:1}")
 			let sum_priorities+=$priority
 			break
 		fi
@@ -41,16 +31,26 @@ do
 #----------------------------Second Star--------------------------------------#
 	line_buffer[$line_number]=$line
 	let line_number++
-	[ "$line_number" -eq 3 ] && for (( position ))
-
-
-	echo ${line_number[1]}
-
-
+	if [ "$line_number" -eq 4 ]
+	then
+		line_ref="${line_buffer[1]}"
+		for (( i=0; i<${#line_ref}; i++ ))	
+		do
+			if [[ "${line_buffer[2]}" == *"${line_ref:$i:1}"* ]]
+			then
+				if [[ "${line_buffer[3]}" == *"${line_ref:i:1}"* ]]
+				then
+					badge=$(char_to_asc ${line_ref:$i:1})
+					let sum_budges+=$badge
+					break
+				fi
+			fi
+		done
+		line_number=1
+	fi
 #------------------------------End--------------------------------------------#
 done < "$1"
-#-----------------------------------------------------------------------------#
-
-echo "First star -> $sum_priorities"
-
+#---------------------------Result--------------------------------------------#
+echo "First star  -> $sum_priorities"
+echo "Second star -> $sum_budges"
 #-----------------------------------------------------------------------------#
