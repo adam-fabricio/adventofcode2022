@@ -21,20 +21,25 @@ do
     stack_index=( $(sed $i\!d "$1") )
 done
 
-
 for index in ${stack_index[@]}
 do
-    teste=$(head -$marker $1 | awk '{print $'$index'}' )
-    #stack[$index]=$(head -$i $1 | awk '{print $index}' ) 
-    echo $teste
+    declare -a stack_$index
 done
 
-for item in ${stack[@]}
+
+for (( line=$marker ; line>0 ; line-- )) 
 do
-    echo $item
+
+    floor=$(sed $line\!d $1 )
+    for index in ${stack_index[@]}
+    do
+        all="#stack_"$index"[*]"
+        echo $all
+        echo "${!all}_"
+        declare stack_$index=ad
+        echo $(declare -p stack_$index)
+    done
 done
-
-
 
 #---------------------------------First Star----------------------------------#
 #---------------------------------Second Star---------------------------------#
