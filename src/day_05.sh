@@ -29,17 +29,21 @@ done
 
 for (( line=$marker ; line>0 ; line-- )) 
 do
-
     floor=$(sed $line\!d $1 )
-    for index in ${stack_index[@]}
+    for stack in ${stack_index[@]}
     do
-        all="#stack_"$index"[*]"
-        echo $all
-        echo "${!all}_"
-        declare stack_$index=ad
-        echo $(declare -p stack_$index)
+        let index=-3+4*stack
+        eval pointer="\${#stack_$stack[@]}"
+        if [ "${floor:$index:1}" != " " ] 
+        then
+            declare stack_$stack[$pointer]=${floor:index:1}
+        fi
+        echo $(declare -p stack_$stack)
     done
 done
+
+
+
 
 #---------------------------------First Star----------------------------------#
 #---------------------------------Second Star---------------------------------#
