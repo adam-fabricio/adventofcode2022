@@ -8,9 +8,24 @@ test -z "$1" && echo "Erro!"  && exit 1
 stack_index=0
 declare -a stack
 #-----------------------------------Functions---------------------------------#
-#------------------------------------Codes-------------------------------------#
+show_stacks() {
+    for stack in ${stack_index[@]}
+    do
+        echo $(declare -p stack_$stack)
+    done
+}
+
+giant_cargo_crane() {
+    echo "Move ${1} from ${2} to ${3}."
+    show_stacks
+
+}
+
+#------------------------------------Codes------------------------------------#
 
 #----------------------------------Stacks-------------------------------------#
+
+#  Find marker of stacks and commands
 for (( i=1; i>0; i++ ))
 do
     if ! [[ $(sed $i\!d "$1") ]] 
@@ -21,12 +36,8 @@ do
     stack_index=( $(sed $i\!d "$1") )
 done
 
-for index in ${stack_index[@]}
-do
-    declare -a stack_$index
-done
 
-
+#  Transform stacks in arrays
 for (( line=$marker ; line>0 ; line-- )) 
 do
     floor=$(sed $line\!d $1 )
@@ -38,12 +49,15 @@ do
         then
             declare stack_$stack[$pointer]=${floor:index:1}
         fi
-        echo $(declare -p stack_$stack)
     done
 done
 
-
-
+#  Get commands
+while read line
+do
+    line=( $line )
+    giant_cargo_crane ${line[1]} ${line[3]} ${line[5]}
+done <<< $(sed 1,"$i"d $1) 
 
 #---------------------------------First Star----------------------------------#
 #---------------------------------Second Star---------------------------------#
