@@ -26,13 +26,37 @@ pop () {
 }
 
 giant_cargo_crane() {
-    #show_stacks
     for (( move=0 ; move<$1 ; move++ ))
     do
 		pop $2
 		push $3 $item
     done
 
+}
+
+get_crate() {
+	for (( move=0 ; move<$1; move++ ))
+	do
+		pop $2
+		crate+=( "$item" )
+	done
+}
+
+post_crate() {
+	for (( move=0 ; move<$1; move++ ))
+	do
+		stack_temp="crate[-1]"
+		item=${!stack_temp}
+		unset crate[-1]
+		push $2 $item
+	done
+
+}
+
+
+crate_mover_9001() {
+    get_crate $1 $2
+	post_crate $1 $3
 }
 
 #------------------------------------Codes------------------------------------#
@@ -77,7 +101,8 @@ done
 while read line
 do
     line=( $line )
-    giant_cargo_crane ${line[1]} ${line[3]} ${line[5]}
+	crate_mover_9001 ${line[1]} ${line[3]} ${line[5]}
+	#giant_cargo_crane ${line[1]} ${line[3]} ${line[5]}
 done <<< $(sed 1,"$i"d $1) 
 
 #---------------------------------First Star----------------------------------#
