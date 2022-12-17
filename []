@@ -6,6 +6,7 @@
 test -z "$1" && echo "Erro!"  && exit 1 
 #-----------------------------------Variable----------------------------------#
 stack_index=0
+declare -a stack
 #-----------------------------------Functions---------------------------------#
 show_stacks() {
     for stack in ${stack_index[@]}
@@ -15,18 +16,22 @@ show_stacks() {
 }
 
 push() {
-	declare -n arr_name=stack_$1
-	arr_name+=( "$2" )
+	echo $1 $2
+    eval pointer="\${#stack_$1[@]}"
+    declare stack_$1[$pointer]="$2"
+	echo $(declare -p stack_$1
 }
 
 pop () {
-	stack_temp="stack_$1[-1]"
-	item=${!stack_temp}
+	stack="stack_$1[-1]"
+	item=${!stack}
 	unset stack_$1[-1]
 }
 
 giant_cargo_crane() {
-    #show_stacks
+    echo "Move ${1} from ${2} to ${3}."
+    show_stacks
+	
     for (( move=0 ; move<$1 ; move++ ))
     do
 		pop $2
@@ -73,7 +78,6 @@ do
 done	
 
 #  Get commands
-
 while read line
 do
     line=( $line )
@@ -81,14 +85,6 @@ do
 done <<< $(sed 1,"$i"d $1) 
 
 #---------------------------------First Star----------------------------------#
-for stack in ${stack_index[@]}
-do
-	stack_temp="stack_$stack[-1]"
-	item=${!stack_temp}
-	echo -n $item
-done
-echo
-
 #---------------------------------Second Star---------------------------------#
 #-------------------------------------END-------------------------------------#
 #-----------------------------------Results-----------------------------------#
