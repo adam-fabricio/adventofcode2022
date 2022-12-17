@@ -15,9 +15,24 @@ show_stacks() {
     done
 }
 
+push() {
+	echo "parametros: $1 $2"
+}
+
+pop () {
+	stack="stack_$1[-1]"
+	echo ${!stack}
+	unset stack_$1[-1]
+}
+
 giant_cargo_crane() {
     echo "Move ${1} from ${2} to ${3}."
-    show_stacks
+    #show_stacks
+
+    for (( move=0 ; move<$1 ; move++ ))
+    do
+	    push $3 $(pop $2)
+    done
 
 }
 
