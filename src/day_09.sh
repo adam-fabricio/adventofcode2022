@@ -6,14 +6,12 @@
 test -z "$1" && echo "Erro!"  && exit 1 
 #-----------------------------------Variable----------------------------------#
 declare -A head
-declare -A tail
-declare -i distance_x
-declare -i distance_y
-declare -a move
+declare -A tail_1
+declare -A tail_9
+declare -a tails
+
 h_x=0	#  head position x
 h_y=0	#  head position y
-t_x=0	#  tail position x
-t_y=0	#  tail position y
 
 #-----------------------------------Functions---------------------------------#
 motion() {
@@ -23,7 +21,7 @@ motion() {
 	declare -i dist
 	declare -i x=0
 	declare -i y=0
-
+    
 	dist_x=$1-"${3:-0}"
 	dist_y=$2-"${4:-0}"
 	dist=${dist_x#-}+${dist_y#-}
@@ -80,50 +78,32 @@ do
 			;;
 	esac
 
-	##  Motion
     
 	for (( i=0 ; i<${command[1]} ; i++ ))
 	do
-        echo "h->($h_x,$h_y)"
-		h_x_old=$h_x
-		h_y_old=$h_y
 		let $operation_head
-		distance_x=$h_x-$t_x
-		distance_y=$h_y-$t_y
-		
 
-
-		head="$h_x $h_y"
-
-        t1=( "$t1_x $t1_y" )
-
-        move=( $(motion $head $t1) )
-        motion $head $t1
-        #declare -p move
-        
-
-        t1=( $(move_exec "${move[@]}" "$t1") )
-
-        declare -p t1
-
-		if [ ${distance_x#-} = "2" ] || [ ${distance_y#-} = "2" ]
-		then
-			t_x=$h_x_old
-			t_y=$h_y_old
-		fi
-				
-		tail[$t_x,$t_y]=1
+        head="$h_x $h_y"
+        move=$(motion $head ${tails[1]})
+        tails[1]=$(move_exec "${move}" "${tails[1]}")
+	    
+        for idx in {2..9}
+        do
+            move=$(motion ${tails[$idx-1]} ${tails[$idx]})
+            tails[$idx]=$(move_exec "${move}" "${tails[$idx]}")
+        done
+        tail_1[${tails[1]}]=1
+        tail_9[${tails[9]}]=1
 	done
-	echo "head -> ($h_x, $h_y) tail -> ($t_x, $t_y) "
 done < $1
 
 
 
 
 #---------------------------------First Star----------------------------------#
-declare -p tail
-echo ${#tail[*]}
+echo ${#tail_1[*]}
 #---------------------------------Second Star---------------------------------#
+echo ${#tail_9[*]}
 #-------------------------------------END-------------------------------------#
 #-----------------------------------Results-----------------------------------#
 #--------------------------------------|--------------------------------------#
