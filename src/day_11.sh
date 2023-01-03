@@ -2,12 +2,31 @@
 
 # day_11.sh
 
+# Não consegui descobrir sozinho a lógica da segunda parte tive que buscar ajuda
+# na internet!
+
 #-----------------------------------Test input--------------------------------#
 test -z "$1" && echo "Erro!"  && exit 1 
 #-----------------------------------Variable----------------------------------#
 declare -a monkeys
 declare -i worry_level
+declare -i rounds_1=20
+declare -i rounds_2=10000
+
+
 #-----------------------------------Functions---------------------------------#
+function prime_reduce () {
+    prime_factors=( $(factor "$1" | tr ' ' '\n' | uniq | tr '\n' ' '   ) )
+    local result=1
+    for (( i=1 ; i<${#prime_factors[@]} ; i++ ))
+    do
+        [[ ${prime_factors[$i]} -gt "50" ]] && prime_factors[$i]=1
+        
+        result=$(( $result * ${prime_factors[$i]} ))
+    done
+
+    echo $result 
+}
 #------------------------------------Codes------------------------------------#
 #------------------------------------Parse------------------------------------#
 while read -a note
@@ -43,7 +62,7 @@ done < "$1"
 #------------------------------------Trow-------------------------------------#
 
 
-for ((i=0 ; i<20 ; i++))
+for ((i=0 ; i<$rounds_1 ; i++))
 do
 
     for monkey in ${monkeys[@]}
@@ -111,7 +130,7 @@ do
     
 done
 
-echo "$(( ${top_inspect[0]} * ${top_inspect[1]} )) "
+echo "First Star: $(( ${top_inspect[0]} * ${top_inspect[1]} )) "
 
 echo; echo ; echo '--------------------------' ; echo ; echo ;
 #---------------------------------Second Star---------------------------------#
@@ -148,8 +167,20 @@ do
 
 done < "$1"
 
+#---------------------------------Calc worry reduction------------------------#
 
-for ((i=0 ; i<1000; i++))
+declare -i worry_reduction=1
+
+for monkey in ${monkeys[@]}
+do
+    monkey_ref="$monkey[Test]"
+    worry_factor=${!monkey_ref}
+    worry_reduction=$(( worry_reduction * worry_factor ))
+done
+
+
+#-----------------------------------Calc Rounds-------------------------------#
+for ((i=0 ; i<$rounds_2 ; i++))
 do
 
     for monkey in ${monkeys[@]}
@@ -169,8 +200,8 @@ do
             signal="${operation:10:1}"
             value="${operation:12}"
             [[ $value -eq "old" ]] && value=${item%,}
-            worry=$(( (${item%,} $signal $value) / 3 ))
-            #worry=${item%,}
+            worry=$(( (${item%,} $signal $value) % $worry_reduction ))
+
 
             #  Test
             
@@ -188,16 +219,18 @@ do
             #  Inspection
             monkey_inspection_ref="$monkey[inspect]"
             monkey_inspection="${!monkey_inspection_ref}"
-            declare -A $monkey[inspect]=$(( $monkey_inspection +1))
+            declare -A $monkey[inspect]=$(( $monkey_inspection + 1 ))
         
         done
         
         declare -A $monkey[items]=""
     done
+
+    #echo "Round - $i"
+    #declare -p ${monkeys[@]} monkeys
 done
 
-
-echo; echo ; echo '--------------------------' ; echo ; echo ;
+#-------------------------------Product top two inspect-----------------------#
 
 declare -ia top_inspect=( 0 0 )
 
@@ -219,12 +252,10 @@ do
     
 done
 
-echo "$(( ${top_inspect[0]} * ${top_inspect[1]} )) "
+echo "Second Star: $(( ${top_inspect[0]} * ${top_inspect[1]} )) "
 
 echo; echo ; echo '--------------------------' ; echo ; echo ;
 #-------------------------------------END-------------------------------------#
-echo; echo ; echo '--------------------------' ; echo ; echo ;
 
-declare -p ${monkeys[@]} monkeys
 #-----------------------------------Results-----------------------------------#
 #--------------------------------------|--------------------------------------#
