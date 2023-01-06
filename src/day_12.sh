@@ -121,14 +121,15 @@ do
         #----------------Add distance to map--------------------#
         map["$neighbor"]+=" $(($map_dist+1))"
         #------Check if best signal position--------------------#
-		[[ $map_value -eq "97" ]] && break 2
+		echo "map[neighbor] -> ${map[$neighbor]}"
+        [[ ${map[$neighbor]}_value == "97"* ]] && break 3 
     done
-    declare -p queue
+    #declare -p queue
 	#----------------------unset neighbors-----------------------------------#
 	neighbors=( )
     queue=( "${queue[@]:1}" )
 done
-declare -p map
+#declare -p map
 for ((i=1 ; i<=$max_lin ; i++ ))
 do
 	echo -n "$i->"
