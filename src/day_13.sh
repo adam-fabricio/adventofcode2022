@@ -7,6 +7,7 @@
 #  parser     -> 1673113343 -> 07/01/23 14:42:23
 #  first try  -> 1673121350 -> 07/01/23 16:55:50 -> 6178 too low
 #  Second try -> 1673151367 -> 08/01/23 01:16:07 -> 6555 too high
+#  third try  -> 1673152518 -> 08/01/23 01:35:18 -> 6401 too low
 #----------------------------------Data input---------------------------------#
 if [[ "$1" == "teste" ]]
 then
@@ -18,23 +19,36 @@ else
 fi
 #---------------------------------Compare function----------------------------#
 function compare () {
-    left=$(tr -d "[]" <<< $1)
-    right=$(tr -d "[]" <<< $2)
-    IFS=',' read -a left <<< "$left"
-    IFS=',' read -a right <<< "$right"
-    if test -z $right && test -z $left
-    then
-        [[ ${#1} -gt ${#2} ]] && echo 0 || echo 1
+    left=$(tr ",[]" " " <<< $1)
+    right=$(tr ",[]" " " <<< $2)
+#    left=$(tr -d "[]" <<< $1)
+#    right=$(tr -d "[]" <<< $2)
+     read -a left <<< "$left"
+     read -a right <<< "$right"
+#    IFS=',' read -a left <<< "$left"
+#    IFS=',' read -a right <<< "$right"
+#    
+    for ((i=0 ; i<${#left[@]} ; i++))
+    do
+        [[ ${left[i]} -eq ${right[i]} ]] && continue
+        [[ ${left[i]} -lt ${right[i]} ]] && echo 1 || echo 0
         return
-    else
-        for ((i=0 ; i<${#left[@]} ; i++))
-        do
-            [[ ${left[i]} -eq ${right[i]} ]] && continue
-            [[ ${left[i]} -lt ${right[i]} ]] && echo 1 || echo 0
-            return
-        done
-    fi
-    echo 1
+    done
+    [[ ${#1} -gt ${#2} ]] && echo 0 || echo 1
+    
+
+#    if test -z $right && test -z $left
+#    then
+#        [[ ${#1} -gt ${#2} ]] && echo 0 || echo 1
+#        return
+#    else
+#        for ((i=0 ; i<${#left[@]} ; i++))
+#        do
+#            [[ ${left[i]} -eq ${right[i]} ]] && continue
+#            [[ ${left[i]} -lt ${right[i]} ]] && echo 1 || echo 0
+#            return
+#        done
+#    fi
 }
 
 function compare_2 () {
