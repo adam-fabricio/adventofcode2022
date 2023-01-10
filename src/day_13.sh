@@ -8,6 +8,24 @@
 #  first try  -> 1673121350 -> 07/01/23 16:55:50 -> 6178 too low
 #  Second try -> 1673151367 -> 08/01/23 01:16:07 -> 6555 too high
 #  third try  -> 1673152518 -> 08/01/23 01:35:18 -> 6401 too low
+#--------------------------------------|--------------------------------------#
+#    If both values are integers, the lower integer should come first. If the 
+#left integer is lower than the right integer, the inputs are in the right 
+#order. If the left integer is higher than the right integer, the inputs are 
+#not in the right order. Otherwise, the inputs are the same integer; 
+#continue checking the next part of the input.
+#    If both values are lists, compare the first value of each list, then the 
+#second value, and so on. If the left list runs out of items first, the 
+#inputs are in the right order. If the right list runs out of items first, 
+#the inputs are not in the right order. If the lists are the same length and 
+#no comparison makes a decision about the order, continue checking the next 
+#part of the input.
+#    If exactly one value is an integer, convert the integer to a list which 
+#contains that integer as its only value, then retry the comparison. For 
+#example, if comparing [0,0,0] and 2, convert the right value to [2] (
+#a list containing 2); the result is then found by instead comparing 
+#[0,0,0] and [2].
+#
 #----------------------------------Data input---------------------------------#
 if [[ "$1" == "teste" ]]
 then
@@ -18,45 +36,69 @@ else
     echo -e "use source data input\n\n"
 fi
 #---------------------------------Compare function----------------------------#
-function compare () {
-    left=$(tr ",[]" " " <<< $1)
-    right=$(tr ",[]" " " <<< $2)
-#    left=$(tr -d "[]" <<< $1)
-#    right=$(tr -d "[]" <<< $2)
-     read -a left <<< "$left"
-     read -a right <<< "$right"
-#    IFS=',' read -a left <<< "$left"
-#    IFS=',' read -a right <<< "$right"
-#    
-    for ((i=0 ; i<${#left[@]} ; i++))
-    do
-        [[ ${left[i]} -eq ${right[i]} ]] && continue
-        [[ ${left[i]} -lt ${right[i]} ]] && echo 1 || echo 0
-        return
-    done
-    [[ ${#1} -gt ${#2} ]] && echo 0 || echo 1
+function extract_list () {
+    #list=( $(sed 's/^\[// ; s/\]$//' <<< $1) )
+    list=${
     
-
-#    if test -z $right && test -z $left
-#    then
-#        [[ ${#1} -gt ${#2} ]] && echo 0 || echo 1
-#        return
-#    else
-#        for ((i=0 ; i<${#left[@]} ; i++))
-#        do
-#            [[ ${left[i]} -eq ${right[i]} ]] && continue
-#            [[ ${left[i]} -lt ${right[i]} ]] && echo 1 || echo 0
-#            return
-#        done
-#    fi
+    echo "${list[@]}"
 }
 
-function compare_2 () {
-    left_list=$(sed 's/\[// ; s/]$//' <<< $1)
-    right_list=$(sed 's/\[// ; s/]$//' <<< $2)
-} 
+arr_test=[[1],[2,3,4]]
+
+exit
 
 
+function compare () {
+    #--------Extract Value and convert to array--------#
+    left=( $(extract_list $1) )
+    right=($(extract_list $2) )
+    #--------Iterate by list left----------------------#
+     for ((i=0; i<${#left[@]}; i++))
+    do
+        #  If left is integer
+        if [[ ${left[i]} =~ ^[-+]?[0-9]+$ ]] 
+        then
+            #  If right is integer
+            if [[ ${right[i]} =~ ^[-+]?[0-9] ]] 
+            then
+                [[ ${left[i]} -eq ${right[i]} ]] && continue
+                [[ ${left[i]} -lt ${right[i]} ]] && echo 1 || echo 0
+                return
+            #  If right is list
+            elif [[ ${right[i]} =~ ^\[.*\]$ ]] 
+            then
+                compare [${left[i]}] $right[i]
+                return
+            #  If right runs out
+            else
+                echo 0
+                return
+            fi
+        #  If left is list
+        elif [[ ${left[i]} =~ ^\[.*\]$ ]] 
+        then
+            # if right is integer
+            if [[ ${right[i]} =~ ^[-+]?[0-9] ]]
+            then
+                compare ${left[i]} [$right[i]]
+                return
+            #  If right is list
+            elif [[ ${right[i]} =~ ^\[.*\]$ ]] 
+            then
+                compare ${left[i]} ${right[i]}
+                return
+            #  if right runs out 
+            else
+                echo 0
+                return
+            fi
+        #  Left runs out
+        else
+            echo 1
+            return
+        fi
+    done
+}
 #----------------------------------Read data input----------------------------#
 i=1
 declare -i sum_indice
