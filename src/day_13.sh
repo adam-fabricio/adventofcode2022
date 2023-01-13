@@ -8,6 +8,7 @@
 #  first try  -> 1673121350 -> 07/01/23 16:55:50 -> 6178 too low
 #  Second try -> 1673151367 -> 08/01/23 01:16:07 -> 6555 too high
 #  third try  -> 1673152518 -> 08/01/23 01:35:18 -> 6401 too low
+#  first Star -> 1673639159 -> 13/01/23 16:01:59
 #--------------------------------------|--------------------------------------#
 #    If both values are integers, the lower integer should come first. If the 
 #left integer is lower than the right integer, the inputs are in the right 
@@ -37,24 +38,24 @@ else
 fi
 #---------------------------------Compare function----------------------------#
 function extract_list () {
-	b=0
+	# vars
+	local brackets 
+	local i
+	local itens
 	local list
+   	local raw_list
 
-   	raw_list=${1:1:${#1}-2}
+	#  extract list
+	raw_list=${1:1:${#1}-2}
 	
-	#list=( $(sed 's/^\[// ; s/\]$//' <<< $1) )
+	#  Iterate by itens in list
 	while :
 	do
-		let b++
-		[[ b -eq 30 ]] && break
 		itens=( ${raw_list/,/" "} ) 
-		if [[ -z ${itens[0]} ]]
+		if [[ ${itens[0]} =~ \[ ]] 
 		then
-			break
-		elif [[ ${itens[0]} =~ \[ ]] 
-		then
-			i=0
-			brackets=0
+			local i=0
+			local brackets=0
 			while :
 			do
 				if [[ ${raw_list:i:1} == [ ]] 
@@ -66,50 +67,39 @@ function extract_list () {
 					if [[ brackets -eq 0 ]] 
 					then
 						itens=( ${raw_list:0:i} ${raw_list:i+1} )
-
+						break
 					fi
 				else
 					let i++
 				fi
 			done
-		else
-			echo "estou aqui"
-			list+=( ${itens[0]} )
-			raw_list=${itens[1]}
 		fi
-	echo $b
-	declare -p list raw_list itens
+		list+=( ${itens[0]} )
+		raw_list=${itens[1]}
+		[[ -z ${itens[0]} ]] && break
 	done
     
 	echo "${list[@]}"
 }
 
-i=0
-while read -a list
-do
-	if [[ i -eq 3 ]]
-		then
-			echo "list->$list"
-			extract_list $list
-	fi
-	let i++
-done < $data_input
-
-exit
-
-
 function compare () {
+	#  Vars
+	local i
+	local right
+	local left
+	local value
+
     #--------Extract Value and convert to array--------#
     left=( $(extract_list $1) )
-    right=($(extract_list $2) )
+    right=( $(extract_list $2) )
     #--------Iterate by list left----------------------#
-     for ((i=0; i<${#left[@]}; i++))
+    for ((i=0; i<${#left[@]}; i++))
     do
-        #  If left is integer
+		#  If left is integer
         if [[ ${left[i]} =~ ^[-+]?[0-9]+$ ]] 
-        then
+		then
             #  If right is integer
-            if [[ ${right[i]} =~ ^[-+]?[0-9] ]] 
+            if [[ ${right[i]} =~ ^[-+]?[0-9]+$ ]] 
             then
                 [[ ${left[i]} -eq ${right[i]} ]] && continue
                 [[ ${left[i]} -lt ${right[i]} ]] && echo 1 || echo 0
@@ -117,54 +107,66 @@ function compare () {
             #  If right is list
             elif [[ ${right[i]} =~ ^\[.*\]$ ]] 
             then
-                compare [${left[i]}] $right[i]
-                return
-            #  If right runs out
-            else
-                echo 0
-                return
-            fi
+				value=$( compare [${left[i]}] ${right[i]} )
+				test -z $value && continue
+			   	echo $value	
+				return
+			#  if right is None
+			else
+				echo "0"
+				return
+			fi
         #  If left is list
         elif [[ ${left[i]} =~ ^\[.*\]$ ]] 
         then
-            # if right is integer
-            if [[ ${right[i]} =~ ^[-+]?[0-9] ]]
-            then
-                compare ${left[i]} [$right[i]]
-                return
             #  If right is list
-            elif [[ ${right[i]} =~ ^\[.*\]$ ]] 
+            if [[ ${right[i]} =~ ^\[.*\]$ ]] 
             then
-                compare ${left[i]} ${right[i]}
-                return
-            #  if right runs out 
-            else
-                echo 0
-                return
-            fi
-        #  Left runs out
-        else
-            echo 1
-            return
-        fi
-    done
+				value=$( compare ${left[i]} ${right[i]} )
+				test -z $value && continue
+			   	echo $value	
+				return
+            #  if right is integer
+            elif [[ ${right[i]} =~ ^[-+]?[0-9] ]]
+            then
+				value=$( compare ${left[i]} [${right[i]}] )
+				test -z $value && continue 
+				echo $value
+				return
+			#  if right is None
+			else
+				echo "0"
+				return
+			fi
+		fi
+	done
+	#  left is None
+	#  if right is integer
+	if [[ ${right[i]} =~ ^[-+]?[0-9] ]]
+	then
+		echo "1"
+	#  If right is list
+	elif [[ ${right[i]} =~ ^\[.*\]$ ]] 
+	then
+		echo "1"
+	fi
 }
+
 #----------------------------------Read data input----------------------------#
 i=1
 declare -i sum_indice
 packtes=$(tr "\n" " " < "$data_input" | sed 's/  /\n/g')
 while read -a package 
 do
-    
     compare_result=$(compare ${package[@]})
-    
-    echo -ne "$i-> ${compare_result}\n"  
+   
     echo "left  ${package[0]}"
     echo "right ${package[1]}"
+    compare ${package[@]}
+	echo -ne "$i-> ${compare_result}\n"  
     echo 
     let sum_indice+=$i*$compare_result
     let i++
-    #exit
 done <<< "$packtes" 
 echo $sum_indice
 #--------------------------------------|--------------------------------------#
