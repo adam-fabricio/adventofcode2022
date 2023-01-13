@@ -37,13 +37,63 @@ else
 fi
 #---------------------------------Compare function----------------------------#
 function extract_list () {
-    #list=( $(sed 's/^\[// ; s/\]$//' <<< $1) )
-    list=${
+	b=0
+	local list
+
+   	raw_list=${1:1:${#1}-2}
+	
+	#list=( $(sed 's/^\[// ; s/\]$//' <<< $1) )
+	while :
+	do
+		let b++
+		[[ b -eq 30 ]] && break
+		itens=( ${raw_list/,/" "} ) 
+		if [[ -z ${itens[0]} ]]
+		then
+			break
+		elif [[ ${itens[0]} =~ \[ ]] 
+		then
+			i=0
+			brackets=0
+			while :
+			do
+				if [[ ${raw_list:i:1} == [ ]] 
+				then
+					let brackets++ i++
+				elif [[ ${raw_list:i:1} == ] ]] 
+				then
+					let brackets-- i++
+					if [[ brackets -eq 0 ]] 
+					then
+						itens=( ${raw_list:0:i} ${raw_list:i+1} )
+
+					fi
+				else
+					let i++
+				fi
+			done
+		else
+			echo "estou aqui"
+			list+=( ${itens[0]} )
+			raw_list=${itens[1]}
+		fi
+	echo $b
+	declare -p list raw_list itens
+	done
     
-    echo "${list[@]}"
+	echo "${list[@]}"
 }
 
-arr_test=[[1],[2,3,4]]
+i=0
+while read -a list
+do
+	if [[ i -eq 3 ]]
+		then
+			echo "list->$list"
+			extract_list $list
+	fi
+	let i++
+done < $data_input
 
 exit
 
