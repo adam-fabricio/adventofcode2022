@@ -9,6 +9,7 @@
 #  Second try -> 1673151367 -> 08/01/23 01:16:07 -> 6555 too high
 #  third try  -> 1673152518 -> 08/01/23 01:35:18 -> 6401 too low
 #  first Star -> 1673639159 -> 13/01/23 16:01:59
+#  Second Star-> 1673644004 -> 13/01/23 18:01:44
 #--------------------------------------|--------------------------------------#
 #    If both values are integers, the lower integer should come first. If the 
 #left integer is lower than the right integer, the inputs are in the right 
@@ -151,22 +152,28 @@ function compare () {
 		echo "1"
 	fi
 }
-
 #----------------------------------Read data input----------------------------#
 i=1
+index_2=1
+index_6=2
 declare -i sum_indice
 packtes=$(tr "\n" " " < "$data_input" | sed 's/  /\n/g')
 while read -a package 
 do
     compare_result=$(compare ${package[@]})
-   
-    echo "left  ${package[0]}"
-    echo "right ${package[1]}"
-    compare ${package[@]}
-	echo -ne "$i-> ${compare_result}\n"  
-    echo 
     let sum_indice+=$i*$compare_result
-    let i++
+    for	list in ${package[@]}
+	do
+		let index_2+=$(compare $list "[[2]]")
+		let index_6+=$(compare $list "[[6]]")
+	done
+	let i++
+	
 done <<< "$packtes" 
-echo $sum_indice
+
+#-----------------------------First and Second Stars--------------------------#
+
+echo "First star:  $sum_indice"
+echo "Second Star: $(( index_2 * index_6  ))"
+
 #--------------------------------------|--------------------------------------#
