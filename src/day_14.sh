@@ -24,6 +24,7 @@ declare -- sand
 declare -- sand_fall
 declare -i sand_x=500
 declare -i sand_y
+declare -i grains_of_sand=0
 #----------------------------------Read data input----------------------------#
 while read list_coordinates
 do
@@ -61,22 +62,48 @@ do
 done < "$data_input" 
 echo "Number of rocks: ${#solid[@]}"
 #echo "Rocks ${!solid[@]}"
-sand_y=$floor
-set -x
+sand_y=$(( $floor-1 ))
 sand_fall="$sand_x,$sand_y"
 echo "first sand: $sand"
 declare -p sand
-set +x
 echo "Abyss in line: $abyss"
 
-while [[ $sand_x -le $abyss ]]; then
-	while :
-		
-		[[ $sand_x,$sand_y+1
-	
-	
-	
-
-
+echo "###"
+i=0
+while [[ $sand_y -le $abyss ]]; do
+	[[ $i -gt 30 ]] && break
+	if [[ $sand_fall == $sand_x,$sand_y ]] ; then
+		echo "sobe 1"
+		let sand_y--
+		sand_fall="500,$sand_y"
+	else
+		echo "restaura"
+		sand_x=500
+		sand_y=$(cut -d',' -f2 <<< $sand_fall)
+	fi
+	let i++
+	while [[ $sand_y -le $abyss ]] ; do
+		echo "$sand_x,$sand_y"
+		if [[ -z ${!solid[$(($sand_x)),$(($sand_y+1))]} ]]; then
+			echo "desce em linha reta"
+			let sand_y++
+			continue
+		elif [[ -z ${!solid[$(($sand_x-1)),$(($sand_y+1))]} ]]; then
+			echo "desce para esquerda"
+			let sand_x-- sand_y++
+			continue
+		elif [[ -z ${!solid[$(($sand_x+1)),$(($sand_y+1))]} ]]; then
+			echo "desce para direita"
+			let sand_x++ sand_y++
+			continue
+		else
+			echo "estabiliza"
+			solid[$sand_x,$sand_y]=1
+			let grains_of_sand++
+			break
+		fi
+	done
+	echo "grains $grains_of_sand"
+done
 #--------------------------------------|--------------------------------------#
 #--------------------------------------|--------------------------------------#
