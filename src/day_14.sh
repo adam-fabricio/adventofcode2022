@@ -3,9 +3,8 @@
 #  day_14.sh
 #
 #---------------------------------Start Date----------------------------------#
-#
-#    1673756388 -> 15/01/23 01:19:48
-#
+#   start day     -> 1673756388 -> 15/01/23 01:19:48
+#	first atempt  -> 1673847310 -> 16/01/23 02:35:10 - 614 - too higih
 #----------------------------------Data input---------------------------------#
 if [[ "$1" == teste ]]
 then
@@ -60,50 +59,47 @@ do
 		done
 	done
 done < "$data_input" 
+
+echo "###"
 echo "Number of rocks: ${#solid[@]}"
 #echo "Rocks ${!solid[@]}"
 sand_y=$(( $floor-1 ))
 sand_fall="$sand_x,$sand_y"
 echo "first sand: $sand"
-declare -p sand
 echo "Abyss in line: $abyss"
-
 echo "###"
-i=0
+
 while [[ $sand_y -le $abyss ]]; do
-	[[ $i -gt 30 ]] && break
 	if [[ $sand_fall == $sand_x,$sand_y ]] ; then
-		echo "sobe 1"
 		let sand_y--
 		sand_fall="500,$sand_y"
 	else
-		echo "restaura"
 		sand_x=500
 		sand_y=$(cut -d',' -f2 <<< $sand_fall)
 	fi
-	let i++
 	while [[ $sand_y -le $abyss ]] ; do
-		echo "$sand_x,$sand_y"
-		if [[ -z ${!solid[$(($sand_x)),$(($sand_y+1))]} ]]; then
-			echo "desce em linha reta"
+		if [[ -z ${solid[$sand_x,$(($sand_y+1))]} ]]; then
+			#echo "desce em linha reta"
 			let sand_y++
 			continue
-		elif [[ -z ${!solid[$(($sand_x-1)),$(($sand_y+1))]} ]]; then
-			echo "desce para esquerda"
+		elif [[ -z ${solid[$(($sand_x-1)),$(($sand_y+1))]} ]]; then
+			#echo "desce para esquerda"
 			let sand_x-- sand_y++
 			continue
-		elif [[ -z ${!solid[$(($sand_x+1)),$(($sand_y+1))]} ]]; then
-			echo "desce para direita"
+		elif [[ -z ${solid[$(($sand_x+1)),$(($sand_y+1))]} ]]; then
+			#echo "desce para direita"
 			let sand_x++ sand_y++
 			continue
 		else
-			echo "estabiliza"
+			#echo "estabiliza"
 			solid[$sand_x,$sand_y]=1
 			let grains_of_sand++
 			break
 		fi
 	done
-	echo "grains $grains_of_sand"
+	#echo "sand = $sand_x,$sand_y"
+	#echo "grains $grains_of_sand"
 done
+echo "first star: $grains_of_sand"
 #--------------------------------------|--------------------------------------#
 #--------------------------------------|--------------------------------------#
