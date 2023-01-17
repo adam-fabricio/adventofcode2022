@@ -62,6 +62,7 @@ done < "$data_input"
 
 echo "###"
 echo "Number of rocks: ${#solid[@]}"
+rocks=${#solid[@]}
 #echo "Rocks ${!solid[@]}"
 sand_y=$(( $floor-1 ))
 sand_fall="$sand_x,$sand_y"
@@ -69,37 +70,50 @@ echo "first sand: $sand"
 echo "Abyss in line: $abyss"
 echo "###"
 
-while [[ $sand_y -le $abyss ]]; do
-	if [[ $sand_fall == $sand_x,$sand_y ]] ; then
-		let sand_y--
-		sand_fall="500,$sand_y"
-	else
-		sand_x=500
-		sand_y=$(cut -d',' -f2 <<< $sand_fall)
-	fi
-	while [[ $sand_y -le $abyss ]] ; do
+raw_sand=$sand_y
+
+#  while grain of sand not fall into abyss
+while : ; do
+	#  while gains of sand does not reach the rocks or fall into abyss
+	while : ; do
+		#  check if there anything below  
 		if [[ -z ${solid[$sand_x,$(($sand_y+1))]} ]]; then
 			#echo "desce em linha reta"
 			let sand_y++
-			continue
+		#  check if there anything down left
 		elif [[ -z ${solid[$(($sand_x-1)),$(($sand_y+1))]} ]]; then
 			#echo "desce para esquerda"
 			let sand_x-- sand_y++
-			continue
+		#  check if there anything down right	
 		elif [[ -z ${solid[$(($sand_x+1)),$(($sand_y+1))]} ]]; then
 			#echo "desce para direita"
 			let sand_x++ sand_y++
-			continue
+		#   stable 	
 		else
 			#echo "estabiliza"
 			solid[$sand_x,$sand_y]=1
-			let grains_of_sand++
 			break
 		fi
+		set -x
+		if [[ -z $first_star ]] && [[ $sand_y -ge $abyss ]]; then
+		    first_star=$(( ${#solid[@]} - $rocks ))
+		fi
+		set +x
+
+		if [[ $sand_y -eq $(( $floor + 1)) ]]; then
+		    solid[$sand_x,$sand_y]=1
+		    break
+		fi
 	done
-	#echo "sand = $sand_x,$sand_y"
-	#echo "grains $grains_of_sand"
+	sand_x=500
+	if [[ $sand_y -eq 0 ]]; then
+	    second_star=$(( ${#solid[@]} - $rocks ))
+	    break
+	fi
+	[[ $raw_sand -eq $sand_y ]] && let raw_sand--
+	sand_y=$raw_sand
 done
-echo "first star: $grains_of_sand"
+echo "first star: $first_star"
+echo "second star: $second_star"
 #--------------------------------------|--------------------------------------#
 #--------------------------------------|--------------------------------------#
