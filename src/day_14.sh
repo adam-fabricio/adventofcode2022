@@ -5,6 +5,7 @@
 #---------------------------------Start Date----------------------------------#
 #   start day     -> 1673756388 -> 15/01/23 01:19:48
 #	first atempt  -> 1673847310 -> 16/01/23 02:35:10 - 614 - too higih
+#   second star   -> 1674004144 -> 17/01/y 22:09:04
 #----------------------------------Data input---------------------------------#
 if [[ "$1" == teste ]]
 then
@@ -92,20 +93,20 @@ while : ; do
 		else
 			#echo "estabiliza"
 			solid[$sand_x,$sand_y]=1
-			break
+            break
 		fi
-		set -x
-		if [[ -z $first_star ]] && [[ $sand_y -ge $abyss ]]; then
+		
+        if [[ -z $first_star ]] && [[ $sand_y -ge $abyss ]]; then
 		    first_star=$(( ${#solid[@]} - $rocks ))
 		fi
-		set +x
 
-		if [[ $sand_y -eq $(( $floor + 1)) ]]; then
+		if [[ $sand_y -eq $(( $abyss + 1)) ]]; then
 		    solid[$sand_x,$sand_y]=1
-		    break
+            break
 		fi
 	done
-	sand_x=500
+	
+    sand_x=500
 	if [[ $sand_y -eq 0 ]]; then
 	    second_star=$(( ${#solid[@]} - $rocks ))
 	    break
