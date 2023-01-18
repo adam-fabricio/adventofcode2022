@@ -2,6 +2,9 @@
 #
 # day_xx.sh
 #
+#-----------------------------------Versions  --------------------------------#
+#    1.0.0 -> Adam: make a init version of skeleton of project
+#	 1.0.1 -> Adam: error of sixtaxe teste for test.
 #-----------------------------------Test input--------------------------------#
 #-----------------------------------Variable----------------------------------#
 
@@ -16,7 +19,7 @@ echo "#"
 echo "#    $(date +"%s -> %d/%m/%y %H:%M:%S")"
 echo "#"
 echo "#----------------------------------Data input---------------------------------#"
-echo "if [[ \"\$1\" == teste ]]"
+echo "if [[ \"\$1\" == test ]]"
 echo "then"
 echo "    data_input=\"data/day_${day}_test\""
 echo "    echo "Use test data input""
