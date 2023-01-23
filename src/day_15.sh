@@ -8,7 +8,8 @@
 #    1674087435 -> 18/01/23 21:17:15 -> First star
 #
 #------------------------------------Vas-------------------------------------#
-declare -A row_10
+declare -A candidate_beacon
+
 #----------------------------------Data input---------------------------------#
 
 if [[ "$1" == test ]]
@@ -35,28 +36,40 @@ do
     distance_to_row=$(( $sensor_y - $row ))
     signal=$(( ${distance_to_beacon#-} - ${distance_to_row#-} ))
 
-    if [[ $signal -ge 0 ]]; then
-        i=$(($sensor_x-${signal#-}))
-        while [ $i -le $(($sensor_x+${signal#-})) ]
-        do
-            row_10[$i]=1
-            let i++
-        done
-    fi
+## First Star
 
-#	echo
-#	echo "\
-#Sensor: ($sensor_x, $sensor_y) \
-#beacon: ($beacon_x, $beacon_y) \
-#distance to beacon : $distance_to_beacon \
-#distance to row: $distance_to_row \
-#signal: $signal \
-#row: ${#row_10[@]}
-#"
-#	echo
+#    if [[ $signal -ge 0 ]]; then
+#        i=$(($sensor_x-${signal#-}))
+#        while [ $i -le $(($sensor_x+${signal#-})) ]
+#        do
+#            row_array[$i]=1
+#            let i++
+#        done
+#    fi
+
+	echo "sensor -> ($sensor_x,$sensor_y) Raio = $((distance_to_beacon+1))"
+	x_min=$((sensor_x-distance_to_beacon-1))
+	[[ x_min -lt 0 ]] && x_min=0
+	x_max=$((sensor_x+distance_to_beacon+1))
+	[[ x_max -gt 4000000 ]] && x_max=4000000
+	for (( x=x_min ; x<=x_max ; x++ ))
+	do
+		delta_x=$((sensor_x-x))
+		y=$((sensor_y+distance_to_beacon+1-${delta_x#-}))
+		candidate_beacon["$x,$y"]=1
+		y=$((sensor_y-distance_to_beacon-1+${delta_x#-}))
+		candidate_beacon["$x,$y"]=1
+
+	done
+	echo -n "${#candidate_beacon[@]} -> "
+	echo ${!candidate_beacon[@]}
+	unset candidate_beacon
+	declare -A candidate_beacon
+
+
 done < "$data_input" 
 
-echo "row= $(( ${#row_10[@]} -1 ))"
+#echo "row= $(( ${#row_array[@]} -1 ))"
 
 #--------------------------------------|--------------------------------------#
 #-----------------------------------Test input--------------------------------#
