@@ -24,6 +24,11 @@ for ((lin=0; lin<=30; lin++ )); do
 			echo -n 'B'
 		elif [[ delta_x_1 -le r_1 ]] && [[ lin -eq $((y_1+r_1-delta_x_1)) ]]; then
 			echo -n 'B'
+		elif [[	col -ge x_0 ]] && [[ col -le x_1 ]] && [[ lin -eq $((col-3)) ]]
+		then
+			echo -n 'L'
+		elif [[ lin -eq $((25-col)) ]]; then
+			echo -n 'Z'
 		else
 			echo -n '.'
 		fi
