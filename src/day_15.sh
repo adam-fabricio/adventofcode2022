@@ -6,7 +6,7 @@
 #
 #    1674068124 -> 18/01/23 15:55:24
 #    1674087435 -> 18/01/23 21:17:15 -> First star
-#
+#    1674678937 -> 25/01/23 17:35:37 -> Second Star
 #------------------------------------Vas-------------------------------------#
 
 
@@ -87,22 +87,69 @@ for (( i=0; i<num_itens-1; i++ )); do
 		signal_shadow=$(( distance - radius_sum ))
 
 		[[ $signal_shadow -ne 2 ]] && continue
-		
+				
 		echo -n "sensor_$i->(${sensors_x[$i]},${sensors_y[$i]}) "
 		echo -n "radious->${radius[$i]} || "
 	    echo -n "sensor_$j->(${sensors_x[$j]},${sensors_y[$j]}) "
 		echo "radius->${radius[$j]}"
-
 		echo -n "distance between sensors=$distance || "
 		echo "sum of radius=$radius_sum"
-		#echo "Diference raius sensors=$signal_shadow"
-
 		echo
-		echo "###"
+		echo "###################################################"
 		echo
+		## y=ax+b
+		if [[ ${sensors_x[i]} -gt ${sensors_x[j]} ]] && 
+		   [[ ${sensors_y[i]} -gt ${sensors_y[j]} ]]; then
+				
+			m+=( -1 )
+			n+=( $((${sensors_y[i]}+${sensors_x[i]}-1-${radius[i]})) )
 
+		elif [[ ${sensors_x[i]} -lt ${sensors_x[j]} ]] && 
+		     [[ ${sensors_y[i]} -lt ${sensors_y[j]} ]]; then
+			
+			m+=( -1 )
+			n+=$((${sensors_y[j]}+${sensors_x[j]}-1-${radius[j]}))
+		
+		elif [[ ${sensors_x[i]} -lt ${sensors_x[j]} ]] && 
+		     [[ ${sensors_y[i]} -gt ${sensors_y[j]} ]]; then
+			
+			m+=( 1 )
+			n+=( $((${sensors_y[i]}-${sensors_x[i]}-1-${radius[i]})) )
+		
+		elif [[ ${sensors_x[i]} -gt ${sensors_x[j]} ]] && 
+		     [[ ${sensors_y[i]} -lt ${sensors_y[j]} ]]; then
+	
+			m+=( 1 )
+			n+=( $((${sensors_y[i]}-${sensors_x[i]}+1+${radius[i]})) )
+		
+		else
+			echo "Ferrou!!!!!!!!!!!"		
+		fi
 	done
 done	
+
+#m=( 1 -1 )
+#n=( -3 25 )
+
+
+if [[ ${m[0]} -gt 0 ]]; then
+
+	x=$(( (${n[1]}-${n[0]})/2 ))
+  	y=$(( x + ${n[0]} ))
+else
+	x=$(( (${n[0]}-${n[1]})/2 ))
+  	y=$(( x + ${n[1]} ))
+	
+fi	
+
+echo "y=${m[0]}x+${n[0]}"
+echo "y=${m[1]}x+${n[1]}"
+
+
+
+echo "x=$x; y=$y"
+echo $(( x * 4000000 + y)) 
+
 
 #echo "row= $(( ${#row_array[@]} -1 ))"
 
