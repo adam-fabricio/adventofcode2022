@@ -16,6 +16,12 @@ set ls=2
 set so=1 
 set cul
 set listchars=tab:»\ ,trail:␣,extends:▶,precedes:◀
+set sm
+set tw=79
+set nowrap
+set mouse=a
+set cc=80
+
 syntax enable
 filetype plugin indent on
 

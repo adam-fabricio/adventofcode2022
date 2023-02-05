@@ -1,4 +1,4 @@
-#!/usr/bin/ bash
+#!/usr/bin/bash
 #
 #  day_16.sh
 #
@@ -39,9 +39,21 @@ done < "$data_input"
 function get_max_flow_rate () {
 	local current_valve=$1
     local time=$2
-	local declare -a visited_valves=$3
-
+	local visited_valves=( $3 )
+	
 	visited_valve+=( $current_valve )
+
+	for valve in ${tunnels[$current_valve]}; do
+		if [[ " ${visited_valve[@]} " == *" $valve "* ]]; then
+			continue
+		else
+			echo -n "$current_valve -> $valve "
+			echo "$(get_max_flow_rate $valve $time ${visited_valves[@]})"
+		fi
+	done
+}
+get_max_flow_rate "AA" "30"
+
 
 
 
