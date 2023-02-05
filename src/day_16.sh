@@ -36,3 +36,13 @@ done < "$data_input"
 
 #--------------------------------------|--------------------------------------#
 
+function get_max_flow_rate () {
+	local current_valve=$1
+    local time=$2
+	local declare -a visited_valves=$3
+
+	visited_valve+=( $current_valve )
+
+
+
+
