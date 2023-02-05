@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/ bash
 #
 #  day_16.sh
 #
@@ -22,19 +22,17 @@ declare -A tunnels
 
 #----------------------------------Read data input----------------------------#
 
-
-
-line_number=1
-
 while read line
 do
-   echo "$line_number -> $line"
+   test -z "$line" && continue
    valve=$(cut -d" " -f2 <<< $line)
-   echo $valve
    flow=$(sed 's/.*=//g ; s/;.*//g' <<<$line)
-   echo $flow
    tunnel=$(sed 's/.* to valves\? '//g <<< $line | tr -d ,)
-   echo $tunnel
-   let line_number++
+   flow_rate["$valve"]="$flow"
+   tunnels["$valve"]="$tunnel"
 done < "$data_input"
+
+# declare -p flow_rate tunnels
+
 #--------------------------------------|--------------------------------------#
+
