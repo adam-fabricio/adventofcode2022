@@ -32,7 +32,7 @@ do
    tunnels["$valve"]="$tunnel"
 done < "$data_input"
 
-# declare -p flow_rate tunnels
+ declare -p flow_rate tunnels
 
 #--------------------------------------|--------------------------------------#
 
@@ -44,19 +44,12 @@ function get_max_flow_rate () {
 
 	##  Subtrair um minuto do tempo
 	let time--
-	##  Verifica se é pode abrir a válvula
-	if test ${flow_rate[$current_valve]} -ne 0; then
-		let time--
-		self_flow=$(( ${flow_rate[$current_valve]} * $time ))
-	else
-		self_flow=0
-	fi
 
 	##  add valve in list of visited
 	visited_valve+=( $current_valve )
 
 	## Print tunnels path
-	echo -n "$current_valve g -> "
+	#echo -n "$current_valve g -> "
 	
 	## Walk through the tunnels
 	for valve in ${tunnels[$current_valve]}; do
@@ -66,14 +59,17 @@ function get_max_flow_rate () {
 			continue
 		else
 			## new path
-			[ $i -ne 0 ] && echo -ne "\n$current_valve g ->"
+			echo -n "$current_valve $time -> "
+			#[ $i -ne 0 ] && echo -ne "\n$current_valve g -> "
+			[ $i -ne 0 ] && echo
 			##  go to next tuneel
 			echo -n "$(get_max_flow_rate $valve $time ${visited_valves[@]})"
 			##  wayback
-			echo -n "$current_valve b -> "
+			echo -n "$current_valve $self_flow -> "
 		fi
 		let i++
 	done
+	[ $i -eq 0 ] && echo -n "$current_valve $self_flow -> "
 }
 
 echo

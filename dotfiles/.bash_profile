@@ -25,8 +25,9 @@
 #    45 - Rosa
 #    47 - Azul Claro
 #    48 - Branco 
-#
-#PS1='\e[01;31m\u\e[m \e[01;34m\W \$ \e[m' 
 
-#PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u\[\033[01;34m\] \w\[\033[00m\]$(__git_ps1) \$ '
-PS1='${debian_chroot:+($debian_chroot)}\[\033[43;30m\] \s \[\033[44;30m\] \u \[\033[42;30m\]  \w \[\033[41;30m\]$(__git_ps1 "  %s ")\[\033[00m\] \$ '
+[ -f "$HOME/.bash_aliases" ] && . ~/.bash_aliases
+
+
+#PS1='${debian_chroot:+($debian_chroot)}\[\033[43;30m\] \s \[\033[44;30m\] \u \[\033[42;30m\]  \w \[\033[41;30m\]$(__git_ps1 "  %s ")\[\033[00m\] \$ '
+PS1='${debian_chroot:+($debian_chroot)}\[\033[43;30m\] \s \[\033[44;30m\]\[\033[42;30m\]  \w \[\033[41;30m\]$(__git_ps1 "  %s ")\[\033[00m\] \$ '
