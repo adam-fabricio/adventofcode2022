@@ -17,7 +17,6 @@ else
 fi
 
 #----------------------------------Variables----------------------------------#
-declare -a relevant_valve
 declare -A flow_rate
 declare -A tunnels
 declare -A dist
@@ -33,10 +32,9 @@ do
    tunnel=$(sed 's/.* to valves\? '//g <<< $line | tr -d ,)
    flow_rate["$valve"]="$flow"
    tunnels["$valve"]="$tunnel"
-   [ $flow -ne 0 ] && relevant_valve+=( $valve )
 done < "$data_input"
 
-declare -p flow_rate tunnels relevant_valve
+#declare -p flow_rate tunnels
 
 #-------------------------Floyd-Warshal algorithm-----------------------------#
 
@@ -67,14 +65,12 @@ for k in ${!tunnels[@]}; do
 	done
 done
 #
-#-------------------------------Visit rooms-----------------------------------#
+#for item in ${!dist[@]}; do
+#	echo "$item -> ${dist[$item]}"
+#done
+#
+#--------------------------------------|--------------------------------------#
 
-function visit () {
-	local room=$1
-	local -A valves_open=
-	local time
-	local -A max_flow
-	
 
 
 #--------------------------------------|--------------------------------------#
