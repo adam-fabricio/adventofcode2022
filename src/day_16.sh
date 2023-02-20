@@ -4,9 +4,9 @@
 #
 #---------------------------------Start Date----------------------------------#
 #
-#    1675535723 -> 04/02/23 15:35:23
-#	 1676730203 -> 18/02/23 11:23:23
-#
+#	1675535723 -> 04/02/23 15:35:23
+#	1676730203 -> 18/02/23 11:23:23
+#	1676901187 -> 20/02/23 10:53:07
 #----------------------------------Data input---------------------------------#
 if [[ "$1" == test ]]
 then
@@ -107,35 +107,9 @@ function visit () {
 		total_flow["${visited:-0}"]="${open_valve}"
 	fi
 }
-# -- function2--#
-
-declare -A total_flow
-function visit_1 () {
-  local room=$1
-  local time=$2
-  local visited=${3:-0}
-  local open_valve=${4:=0}
-  local flow_rate=${flow_rate[$room]}
-  local valve_index=${valve_index[$neighbor]}
-  time=$((time - 1))
-  open_valve=$((time * flow_rate + open_valve))
-  local dist=${dist[${room}-${neighbor}]}
-  local continue_expr="((${visited:-0}&${valve_index})) || [[ $time -le 0 ]]"
-  for neighbor in "${relevant_valve[@]}"; do
-    if eval "$continue_expr"; then
-      continue
-    else
-      local visited_a=$((visited | valve_index))
-      visit_1 "$neighbor" "$((time - dist))" "$visited_a" "$open_valve"
-    fi
-  done
-  if [[ ${total_flow[$visited]} -lt $open_valve ]]; then
-    total_flow[$visited]=$open_valve
-  fi
-}
 
 #---------------------------------Get Max Value-------------------------------#
-visit_1 "AA" "31"
+visit "AA" "27"
 
 echo -e "get max value... \n"
 
@@ -144,6 +118,21 @@ for key in "${!total_flow[@]}"; do
 	echo "${key} -> ${total_flow[$key]}"
 	[[ $max -lt ${total_flow[$key]} ]] && max=${total_flow[$key]}
 done
+
+max=0
+for i in ${!total_flow[@]}; do
+	for j in ${!total_flow[@]}; do
+		if ! (( $i & $j )); then
+			val=$((${total_flow[$i]} + ${total_flow[$j]} ))
+			if [[ $max -lt $val ]]; then
+				max=$val
+				echo "$i:$j-> $(( ${total_flow[$i]} + ${total_flow[$j]} ))"
+			fi
+		fi
+	done
+done
+
+
 
 echo $max
 
