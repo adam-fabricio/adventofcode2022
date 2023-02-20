@@ -107,8 +107,35 @@ function visit () {
 		total_flow["${visited:-0}"]="${open_valve}"
 	fi
 }
+# -- function2--#
+
+declare -A total_flow
+function visit_1 () {
+  local room=$1
+  local time=$2
+  local visited=${3:-0}
+  local open_valve=${4:=0}
+  local flow_rate=${flow_rate[$room]}
+  local valve_index=${valve_index[$neighbor]}
+  time=$((time - 1))
+  open_valve=$((time * flow_rate + open_valve))
+  local dist=${dist[${room}-${neighbor}]}
+  local continue_expr="((${visited:-0}&${valve_index})) || [[ $time -le 0 ]]"
+  for neighbor in "${relevant_valve[@]}"; do
+    if eval "$continue_expr"; then
+      continue
+    else
+      local visited_a=$((visited | valve_index))
+      visit_1 "$neighbor" "$((time - dist))" "$visited_a" "$open_valve"
+    fi
+  done
+  if [[ ${total_flow[$visited]} -lt $open_valve ]]; then
+    total_flow[$visited]=$open_valve
+  fi
+}
+
 #---------------------------------Get Max Value-------------------------------#
-visit "AA" "31"
+visit_1 "AA" "31"
 
 echo -e "get max value... \n"
 
