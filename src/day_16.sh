@@ -52,7 +52,7 @@ done
 
 #-------------------------Floyd-Warshal algorithm-----------------------------#
 
-echo -e "Floyd-Warshal algorithm... \n\n"
+echo -e "Floyd-Warshal algorithm... \n"
 
 ##  create matrix of distance
 for initial_room in ${!tunnels[@]}; do
@@ -84,7 +84,7 @@ done
 #-------------------------------Visit rooms-----------------------------------#
 
 echo -e "Visit rooms... \n"
-
+#$z=0
 declare -A total_flow
 function visit () {
 	local room=$1
@@ -94,13 +94,18 @@ function visit () {
 		time=$(( $time -1 ))
 		open_valve=$(( time * ${flow_rate[$room]} + ${open_valve:-0} ))
 	for neighbor in "${relevant_valve[@]}"; do
-		if [[ $visited == *"$neighbor"* || $time -le 0 ]] ; then
+		if ((${visited:-0}&${valve_index[$neighbor]})) || [[ $time -le 0 ]] ; then
 		continue
 	else
-		visit $neighbor "$(( $time - ${dist[${room}-${neighbor}]} ))" "$visited $neighbor" "$open_valve"
+		visited_a=$(( "${visited:-0}" | "${valve_index[$neighbor]}" ))
+		visit $neighbor "$(( $time - ${dist[${room}-${neighbor}]} ))" "$visited_a" "$open_valve"
 		fi
 	done
-	total_flow["${visited:-"AA"}"]="${open_valve}"
+	#echo "$z ${visited:-0} -> ${open_valve}"
+	#let z++
+	if [[ ${total_flow[${visited:-0}]} -lt ${open_valve} ]]; then
+		total_flow["${visited:-0}"]="${open_valve}"
+	fi
 }
 #---------------------------------Get Max Value-------------------------------#
 visit "AA" "31"
@@ -109,7 +114,7 @@ echo -e "get max value... \n"
 
 max=0
 for key in "${!total_flow[@]}"; do
-	#echo "${key} -> ${total_flow[$key]}"
+	echo "${key} -> ${total_flow[$key]}"
 	[[ $max -lt ${total_flow[$key]} ]] && max=${total_flow[$key]}
 done
 
