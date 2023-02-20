@@ -22,11 +22,12 @@ declare -a relevant_valve
 declare -A flow_rate
 declare -A tunnels
 declare -A dist
+declare -A valve_index
 declare -i inf=$((2**62-1))
 
 #----------------------------------Read data input----------------------------#
 
-echo -e "Parsin... \n\n"
+echo -e "Parsin... \n"
 
 while read line
 do
@@ -40,7 +41,14 @@ do
 done < "$data_input"
 
 #------------------------------index------------------------------------------#
+echo "create index... \n"
 
+index=1
+for valve in ${relevant_valve[@]}; do
+	valve_index[$valve]=$index
+	(( index = index << 1 ))
+done
+1
 
 #-------------------------Floyd-Warshal algorithm-----------------------------#
 
@@ -75,7 +83,7 @@ done
 #
 #-------------------------------Visit rooms-----------------------------------#
 
-echo -e "Visit rooms... \n\n"
+echo -e "Visit rooms... \n"
 
 declare -A total_flow
 function visit () {
@@ -94,14 +102,14 @@ function visit () {
 	done
 	total_flow["${visited:-"AA"}"]="${open_valve}"
 }
-#--------------------------------------|--------------------------------------#
+#---------------------------------Get Max Value-------------------------------#
 visit "AA" "31"
 
-echo -e "get max value... \n\n"
+echo -e "get max value... \n"
 
 max=0
 for key in "${!total_flow[@]}"; do
-	echo "${key} -> ${total_flow[$key]}"
+	#echo "${key} -> ${total_flow[$key]}"
 	[[ $max -lt ${total_flow[$key]} ]] && max=${total_flow[$key]}
 done
 
