@@ -45,7 +45,7 @@ function start_rock () {
 		x=${each_piece%,*}
 		y=${each_piece#*,}
 		x=$((x + 2 ))
-		y=$((y + $highest_rock + 3))
+		y=$((y + $highest_rock + 4))
 		new_piece+=( "$x,$y" )
 	done
 	echo "${new_piece[@]}"
@@ -57,8 +57,8 @@ function go_down () {
 	for each_piece in "${piece[@]}"; do
 		x=${each_piece%,*}
 		y=${each_piece#*,}
-		y=$(( y - 4 ))
-		if [[ y -lt 0 ]] || [[ "${solid_rock[$x,$y]}" -eq 1 ]]; then
+		y=$(( y - 1 ))
+		if [[ y -le 0 ]] || [[ "${solid_rocks[$x,$y]}" -eq 1 ]]; then
 			echo "${piece[@]}"
 			return 1
 		fi
@@ -67,19 +67,47 @@ function go_down () {
 	echo "${new_piece[@]}"
 }
 #----------------------------------Read data input----------------------------#
-read move < "$data_input"
+read moves < "$data_input"
 #----------------------------------Rock Shapes--------------------------------#
 rock_shapes+=( "0,0 1,0 2,0 3,0" )
 rock_shapes+=( "1,0 0,1 1,1 2,1 1,2" )
-rock_shapes+=( "2,0 2,1 0,2 1,2 2,2" )
+rock_shapes+=( "0,0 1,0 2,0 2,1 2,2" )
 rock_shapes+=( "0,0 0,1 0,2 0,3" )
 rock_shapes+=( "0,0 1,0 0,1 1,1" )
 #---------------------------------Main Loop-----------------------------------#
-for ((rock=0; rock<5; rock++)); do
+#set -x
+i=0
+for ((rock=0; rock<2022; rock++)); do
 	rock_index=$(( rock % 5 ))
-	piece=$(move "${rock_shapes[rock_index]}" "<")
-	init=$(start_rock "${rock_shapes[rock_index]}")
-	down=$(go_down "$init")
-	echo "$rock_index -> ${rock_shapes[rock_index]} -> $piece -> $init -> $down"
+	rock_piece=$(start_rock "${rock_shapes[rock_index]}")
+	while : ; do
+		index=$(( i % ${#moves} ))
+		rock_piece=$(move "$rock_piece" "${moves:index:1}")
+		let i++
+		if ! rock_piece=$(go_down "$rock_piece"); then 
+			break
+		fi
+	done
+	for each_piece in ${rock_piece[@]}; do
+		solid_rocks[$each_piece]=1
+		y=${each_piece#*,}
+		[[ ${highest_rock:-0} -lt $y ]] && highest_rock=y
+	done
 done
+#-------------------------------First Star------------------------------------#
+declare -p solid_rocks
+echo $highest_rock
 #--------------------------------------|--------------------------------------#
+#print
+for ((y=20; y>0; y--)); do
+	echo -n "|"
+	for ((x=0; x<=6; x++)); do
+		[[ ${solid_rocks["$x,$y"]} -eq 1 ]] && echo -n "#" || echo -n "."
+	done
+	echo "|"
+done
+echo "+-------+"
+
+
+
+
