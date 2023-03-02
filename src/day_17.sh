@@ -29,7 +29,8 @@ function move () {
 		x=${each_piece%,*}
 		y=${each_piece#*,}
 		x=$((x + $direction))
-		if [[ x -lt 0 ]] || [[ x -gt 6 ]]; then
+		if [[ x -lt 0 ]] || [[ x -gt 6 ]] || [[ "${solid_rocks[$x,$y]}" -eq 1 ]]
+		then
 			echo "${piece[@]}"
 			return
 		fi
@@ -66,6 +67,28 @@ function go_down () {
 	done
 	echo "${new_piece[@]}"
 }
+#----------------------------------Function print_map-------------------------#
+function print_map () {
+	clear
+	local piece
+	piece=( $1 )
+	for ((y=$highest_rock+4; y>0; y--)); do
+		echo -n "|"
+		for ((x=0; x<=6; x++)); do
+			if [[ ${solid_rocks["$x,$y"]} -eq 1 ]]; then
+				echo -n "#"
+			elif [[ "${piece[@]}" == *"$x,$y"* ]]; then
+				echo -n "@"
+			else
+				echo -n "."
+			fi
+		done
+		echo "|"
+	done
+	echo "+-------+"
+	echo "$rock"
+	sleep 0.1
+}
 #----------------------------------Read data input----------------------------#
 read moves < "$data_input"
 #----------------------------------Rock Shapes--------------------------------#
@@ -77,16 +100,19 @@ rock_shapes+=( "0,0 1,0 0,1 1,1" )
 #---------------------------------Main Loop-----------------------------------#
 #set -x
 i=0
-for ((rock=0; rock<2022; rock++)); do
+for ((rock=0; rock<28; rock++)); do
 	rock_index=$(( rock % 5 ))
 	rock_piece=$(start_rock "${rock_shapes[rock_index]}")
+	print_map "${rock_piece[@]}"
 	while : ; do
 		index=$(( i % ${#moves} ))
 		rock_piece=$(move "$rock_piece" "${moves:index:1}")
+		print_map "${rock_piece[@]}"
 		let i++
 		if ! rock_piece=$(go_down "$rock_piece"); then 
 			break
 		fi
+		print_map "${rock_piece[@]}"
 	done
 	for each_piece in ${rock_piece[@]}; do
 		solid_rocks[$each_piece]=1
@@ -95,18 +121,8 @@ for ((rock=0; rock<2022; rock++)); do
 	done
 done
 #-------------------------------First Star------------------------------------#
-declare -p solid_rocks
 echo $highest_rock
 #--------------------------------------|--------------------------------------#
-#print
-for ((y=20; y>0; y--)); do
-	echo -n "|"
-	for ((x=0; x<=6; x++)); do
-		[[ ${solid_rocks["$x,$y"]} -eq 1 ]] && echo -n "#" || echo -n "."
-	done
-	echo "|"
-done
-echo "+-------+"
 
 
 
