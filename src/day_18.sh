@@ -22,7 +22,7 @@ declare -A cubes
 declare -A outer_cubes
 declare -A inner_cubes
 declare -A visited_cubes
-declare -A cubes_to_visit
+declare -a cubes_to_visit
 declare -i inf=$((2**62-1))
 declare -i x_max=-1
 declare -i x_min=$inf
@@ -73,27 +73,49 @@ function check_internal () {
 	local x
 	local y
 	local z
-	read x y z <<< $1
-	#  Veriicar se o cubo já foi visitado
-	[[ "${cubes[$1]}" ]] && return
-
+	[[ "${cubes[$1]}" ]] || [[ "${inner_cubes[$1]}" ]] && return 1
+	[[ "${outer_cubes[$1]}" ]] && return 0
 	
-	#  verificar se o é externo.
-	if  [[ $x -lt $x_min ]] || [[ $y -lt $y_min ]] ||[[ $z -lt $z_min ]] ||\
-		[[ $x -gt $x_min ]] || [[ $y -gt $y_min ]] ||[[ $z -gt $z_min ]]; then
-		
-		#  All cubes visit is outer
-		for cube in "${!visited_cubes}"; do
-		outer_cubes["$cube"]=1
-		done
-		return 1
-	fi
+	cubes_to_visit=( "$1" )
 
+	while [[ "${cubes_to_visit}" ]]; do
+		read x y z <<< "${cubes_to_visit[0]}"
+		cubes_to_visit=( "${cubes_to_visit[@]:1}" )
+
+		[[ "${visited_cubes[$x $y $z]}" ]] && continue
+		[[ "${cubes[$x $y $z]}" ]] && continue
+		[[ "${inner_cubes[$x $y $z]}" ]] && continue
+		visited_cubes[$x $y $z]=1
+
+		if [[ $x -lt $x_min ]] || [[ $y -lt $y_min ]] ||[[ $z -lt $z_min ]] ||\
+		   [[ $x -gt $x_max ]] || [[ $y -gt $y_max ]] ||[[ $z -gt $z_max ]] ||\
+		   [[ "${outer_cubes[$x $y $z]}" ]] ; then
+			for visited_cube in "${!visited_cubes[@]}"; do
+				outer_cubes[$visited_cube]=1
+			done
+			echo "$1 -> externo"
+			return 0
+		fi
+
+		cubes_to_visit=( "$((x-1)) $y $z" "$((x+1)) $y $z" "$x $((y-1)) $z"\
+						 "$x $((y+1)) $z" "$x $y $((z-1))" "$x $y $((z+1))"\
+						 "${cubes_to_visit[@]}" )
+	done
+	for visited_cube in "${!visited_cubes[@]}"; do
+		inner_cubes[$visited_cube]=1
+	done
+	echo "$1 -> interno"
+	return 1
 }
 
+ans=0
 for cube in "${!cubes[@]}"; do
-	[[ "${cubes[$((x-1)) $y $z]}" ]] || ((ans+=1))
-	[[ "${cubes[$((x+1)) $y $z]}" ]] || ((ans+=1))
-
+	check_internal "$((x-1)) $y $z" && ((ans+=1))
+	check_internal "$((x+1)) $y $z" && ((ans+=1))
+	check_internal "$x $((y-1)) $z" && ((ans+=1))
+	check_internal "$x $((y+1)) $z" && ((ans+=1))
+	check_internal "$x $y $((z-1))" && ((ans+=1))
+	check_internal "$x $y $((z+1))" && ((ans+=1))
 done
 
+echo $ans
