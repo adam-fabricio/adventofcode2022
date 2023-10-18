@@ -42,66 +42,124 @@ maior_valor() {
 
 #------------------------------Função calcula_qualidade-----------------------#
 calcula_qualidade() {
-	local -n planta_local="$1"
-	local -i tempo_limite="$2"
-	local -i tempo=1
+	local -i tempo_limite="$1"
+	local -a visitado
+	local -i melhor_valor=0
 
-	#  Cria carteira
-	local -A carteira
-	carteira["ore"]=0
-	carteira["clay"]=0
-	carteira["obsidian"]=0
-	carteira["geode"]=0
+	#  Cria a fila
+	#  fila=(ore clay obsidian geode robo_ore robo_clay robo_obsidian
+	#        robo_geode, tempo)
+	local -a fila=( "0 0 0 0 1 0 0 0 1" )
+	
 
-	#  Cria robos
-	local -A robos
-	robos["ore"]=1
-	robos["clay"]=0
-	robos["obsidian"]=0
-	robos["geode"]=0
+	while [[ ${#fila[@]} -gt 0 ]]; do
+		# pega o valor da fila e guarda em atual
+		local atual=( ${fila[0]} )
+		fila=( "${fila[@]:1}" )
 
-	nome_robos=( "ore" "clay" "obsidian" "geode" )
+		#  calcula melhor valor
+		melhor_valor=$(maior_valor "$melhor_valor" "${atual[3]}")
 
-	for ((tempo = 1; $tempo <= $tempo_limite; tempo++)); do
-		#  coleta de recurso
-		for robo in "${nome_robos[@]}"; do
-			carteira["$robo"]=$((carteira["$robo"] + robos["$robo"]))
-		done
+		#  caso pase tempo limite
+		[[ "${atual[8]}" -gt "$tempo_limite" ]] && continue
+		#  caso seja repitido o caso
+		[[ " ${visitado[@]} " =~ " ${atual[@]} " ]] && continue
+		visitado+=("${atual[@]}")
+		
+		echo "${atual[@]}"
+
+		local coleta[0]=$(( atual[0] + atual[4] ))
+		local coleta[1]=$(( atual[1] + atual[5] ))
+		local coleta[2]=$(( atual[2] + atual[6] ))
+		local coleta[3]=$(( atual[3] + atual[7] ))
+		local coleta[4]=$(( atual[4] ))
+		local coleta[5]=$(( atual[5] ))
+		local coleta[6]=$(( atual[6] ))
+		local coleta[7]=$(( atual[7] ))
+		local coleta[8]=$(( atual[8] + 1 ))
+
+		echo "${coleta[@]} -> ${#fila[@]}"
+
+		# Compras
+		# Compra Geode
+		if [[ atual[0] -ge custo_geode_ore \
+			&& atual[2] -ge custo_geode_obisidian ]]
+		then
+			compra=("${coleta[@]}")
+			compra[0]=$(( compra[0] - custo_geode_ore ))
+			compra[2]=$(( compra[2] - custo_geode_obisidian ))
+			compra[7]=$(( compra[7] + 1 ))
+			temp="${compra[@]}"
+			fila+=("${temp[@]}")
+		fi
+			
+		# Compra obsidian
+		if [[ atual[0] -ge custo_obsidian_ore \
+			&& atual[2] -ge custo_obsidian_clay \
+			&& atual[6] -lt custo_max_obsidian ]]
+		then
+			compra=("${coleta[@]}")
+			compra[0]=$(( compra[0] - custo_obsidian_ore ))
+			compra[2]=$(( compra[1] - custo_obisidian_clay ))
+			compra[6]=$(( compra[6] + 1 ))
+			temp="${compra[@]}"
+			fila+=("${temp[@]}")
+		fi
+
+		# Compra clay
+		if [[ atual[0] -ge custo_clay && atual[5] -lt custo_max_clay ]]; then
+			compra=("${coleta[@]}")
+			compra[0]=$(( compra[0] - custo_clay ))
+			compra[5]=$(( compra[5] + 1 ))
+			temp="${compra[@]}"
+			fila+=("${temp[@]}")
+		fi
+
+		# Compra clay
+		if [[ atual[0] -ge custo_ore && atual[4] -lt custo_max_ore ]]; then
+			compra=("${coleta[@]}")
+			compra[0]=$(( compra[0] - custo_ore ))
+			compra[4]=$(( compra[4] + 1 ))
+			temp="${compra[@]}"
+			fila+=("${temp[@]}")
+		fi
+
+		# Sem compra
+		temp="${coleta[@]}"
+		fila+=("${temp[@]}")
 	done
 
-	echo "${carteira[@]}"
-}
 
+}
 
 #----------------------------------Variaveis----------------------------------#
 declare -A planta
 declare -a nivel_qualidade
-declare -i tempo
 
 #------------------------------------Main-------------------------------------#
 
 while read -a line; do
 	#  Da entrada gera as variaveis
 	
-	planta["id"]="${line[1]//:/}"
-	planta["ore_robot"]="${line[6]}"
-	planta["clay_robot"]="${line[12]}"
-	planta["obsidian_robot"]="${line[18]} ${line[21]}"
-	planta["geode_robot"]="${line[27]} ${line[30]}"
+
+	id="${line[1]//:/}"
+	custo_ore="${line[6]}"
+	custo_clay="${line[12]}"
+	custo_obsidian_ore="${line[18]}"
+	custo_obsidian_clay="${line[21]}"
+	custo_geode_ore="${line[27]}"
+	custo_geode_obsidian="${line[30]}"
 
 	#  Máximo de cada robo.
-	planta["max_ore_robot"]=$(maior_valor "${planta["ore_robot"]}"\
-	   "${planta["clay_robot"]}" "${planta["obsidian_robot"]%% *}"\
-	   "${planta["geode_robot"]%% *}")
-	planta["max_clay_robot"]="${planta["obsidian_robot"]#* }"
-	planta["max_obsidian_robot"]="${planta["geode_robot"]#* }"
-
-	tempo=24
+	custo_max_ore=$(maior_valor "$custo_ore" "$custo_clay"\
+		"$custo_obsidian_ore" "$custo_geode_ore")
+	custo_max_clay="$custo_obsidian_clay"
+	custo_max_obsidian="$custo_geode_obsidian"
 	
 	imprime_lista "planta"
 
 	# nivel_qualidade["$id"]=$( calcula_qualidade "planta" "$tempo" )
-	calcula_qualidade "planta" "tempo" 
+	calcula_qualidade 24
 
 	echo "Nivel de Qualidade: ${nivel_qualidade["$id"]} "
 
