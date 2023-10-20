@@ -42,14 +42,15 @@ maior_valor() {
 
 #------------------------------Função calcula_qualidade-----------------------#
 calcula_qualidade() {
-	local -i tempo_limite="$1"
+	local -i tempo="$1"
 	local -a visitado
 	local -i melhor_valor=0
+
 
 	#  Cria a fila
 	#  fila=(ore clay obsidian geode robo_ore robo_clay robo_obsidian
 	#        robo_geode, tempo)
-	local -a fila=( "0 0 0 0 1 0 0 0 1" )
+	local -a fila=( "0 0 0 0 1 0 0 0 $tempo 0" )
 	
 
 	while [[ ${#fila[@]} -gt 0 ]]; do
@@ -57,16 +58,19 @@ calcula_qualidade() {
 		local atual=( ${fila[0]} )
 		fila=( "${fila[@]:1}" )
 
-		#  calcula melhor valor
-		melhor_valor=$(maior_valor "$melhor_valor" "${atual[3]}")
+		[[ ${atual[9]} -eq 7 && ${atual[7]} -eq 0 ]] && continue
 
 		#  caso pase tempo limite
-		[[ "${atual[8]}" -gt "$tempo_limite" ]] && continue
+		[[ "${atual[8]}" -eq 0 ]] && continue
+
 		#  caso seja repitido o caso
 		[[ " ${visitado[@]} " =~ " ${atual[@]} " ]] && continue
 		visitado+=("${atual[@]}")
-		
-		echo "${atual[@]}"
+
+		#  calcula melhor valor
+		melhor_valor=$(maior_valor "$melhor_valor" "${atual[3]}")
+
+		echo "antes da coleta: ${atual[@]} -> $melhor_valor -> ${#fila[@]}"
 
 		local coleta[0]=$(( atual[0] + atual[4] ))
 		local coleta[1]=$(( atual[1] + atual[5] ))
@@ -76,52 +80,77 @@ calcula_qualidade() {
 		local coleta[5]=$(( atual[5] ))
 		local coleta[6]=$(( atual[6] ))
 		local coleta[7]=$(( atual[7] ))
-		local coleta[8]=$(( atual[8] + 1 ))
+		local coleta[8]=$(( atual[8] - 1 ))
+		local coleta[9]=${atual[9]}
 
-		echo "${coleta[@]} -> ${#fila[@]}"
+		echo "Depois da coleta: ${coleta[@]}"
 
 		# Compras
 		# Compra Geode
 		if [[ atual[0] -ge custo_geode_ore \
-			&& atual[2] -ge custo_geode_obisidian ]]
+			&& atual[2] -ge custo_geode_obsidian \
+			&& $(( atual[9] & 8 )) -ne 8 ]]
 		then
 			compra=("${coleta[@]}")
 			compra[0]=$(( compra[0] - custo_geode_ore ))
 			compra[2]=$(( compra[2] - custo_geode_obisidian ))
 			compra[7]=$(( compra[7] + 1 ))
+			coleta[9]=$(( 8 | coleta[9] ))
 			temp="${compra[@]}"
 			fila+=("${temp[@]}")
+			#echo "xxxx ${coleta[9]}"
+			echo "Depois da Compra de Geode: ${temp[@]}"
+			continue
 		fi
 			
 		# Compra obsidian
 		if [[ atual[0] -ge custo_obsidian_ore \
-			&& atual[2] -ge custo_obsidian_clay \
-			&& atual[6] -lt custo_max_obsidian ]]
+			&& atual[1] -ge custo_obsidian_clay \
+			&& atual[6] -lt custo_max_obsidian \
+			&& $(( atual[9] & 1 )) -ne 1 ]]
 		then
 			compra=("${coleta[@]}")
 			compra[0]=$(( compra[0] - custo_obsidian_ore ))
-			compra[2]=$(( compra[1] - custo_obisidian_clay ))
+			compra[1]=$(( compra[1] - custo_obisidian_clay ))
 			compra[6]=$(( compra[6] + 1 ))
+			compra[9]=0
 			temp="${compra[@]}"
 			fila+=("${temp[@]}")
+			coleta[9]=$(( 1 | coleta[9] ))
+			#echo "xxx ${coleta[9]}"
+			echo "Depois da Compra de obsidian: ${temp[@]}"
 		fi
 
 		# Compra clay
-		if [[ atual[0] -ge custo_clay && atual[5] -lt custo_max_clay ]]; then
+		if [[ atual[0] -ge custo_clay \
+			&& atual[5] -lt custo_max_clay \
+			&& $(( atual[9] & 2 )) -ne 2 ]]
+		then
 			compra=("${coleta[@]}")
 			compra[0]=$(( compra[0] - custo_clay ))
 			compra[5]=$(( compra[5] + 1 ))
+			compra[9]=0
 			temp="${compra[@]}"
 			fila+=("${temp[@]}")
+			coleta[9]=$(( 2 | coleta[9] ))
+			#echo "xx ${coleta[9]}"
+			echo "Depois da Compra de clay: ${temp[@]}"
 		fi
 
-		# Compra clay
-		if [[ atual[0] -ge custo_ore && atual[4] -lt custo_max_ore ]]; then
+		# Compra ore
+		if [[ atual[0] -ge custo_ore \
+			&& atual[4] -lt custo_max_ore \
+			&& $(( atual[9] & 4 )) -ne 4 ]]
+		then
 			compra=("${coleta[@]}")
 			compra[0]=$(( compra[0] - custo_ore ))
 			compra[4]=$(( compra[4] + 1 ))
+			compra[9]=0
 			temp="${compra[@]}"
 			fila+=("${temp[@]}")
+			coleta[9]=$(( 4 | coleta[9] ))
+			#echo "x ${coleta[9]}"
+			echo "Depois da Compra de ore: ${temp[@]}"
 		fi
 
 		# Sem compra
@@ -163,6 +192,7 @@ while read -a line; do
 
 	echo "Nivel de Qualidade: ${nivel_qualidade["$id"]} "
 
+	exit
 done < "$data_input"
 
 #--------------------------------------|--------------------------------------#
