@@ -48,8 +48,18 @@ calcula_qualidade() {
 
 
 	#  Cria a fila
-	#  fila=(ore clay obsidian geode robo_ore robo_clay robo_obsidian
-	#        robo_geode, tempo)
+	#  fila[0] = ore
+	#  fila[1] = clay
+	#  fila[2] = obsidian
+	#  fila[3] = geode
+	#  fila[4] = robo_ore
+	#  fila[5] = robo_clay
+	#  fila[6] = robo_obsidian
+	#  fila[7] = robo_geode
+	#  fila[8] = tempo restante
+	#  fila[9] = bitwise
+
+
 	local -a fila=( "0 0 0 0 1 0 0 0 $tempo 0" )
 	
 
@@ -58,18 +68,29 @@ calcula_qualidade() {
 		local atual=( ${fila[0]} )
 		fila=( "${fila[@]:1}" )
 
-		[[ ${atual[9]} -eq 7 && ${atual[7]} -eq 0 ]] && continue
-
-		#  caso pase tempo limite
-		[[ "${atual[8]}" -eq 0 ]] && continue
-
-		#  caso seja repitido o caso
-		[[ " ${visitado[@]} " =~ " ${atual[@]} " ]] && continue
-		visitado+=("${atual[@]}")
 
 		#  calcula melhor valor
 		melhor_valor=$(maior_valor "$melhor_valor" "${atual[3]}")
 
+		####################### Casos de parada #######################
+		#  Caso não va comprar outros robos e não tenho robo de geode
+		[[ ${atual[9]} -eq 7 && ${atual[7]} -eq 0 ]] && continue
+		#  caso pase tempo limite
+		[[ "${atual[8]}" -eq 0 ]] && continue
+		# caso de ter pelo menos 1 robo de geode quebrado
+		#[[ fila[7] -eq 0	
+		#  caso seja repitido o caso
+		[[ fila[0] -ge $((fila[8]*custo_max_ore-fila[4]*(fila[8]-1))) ]] \
+			&& fila[0]=$((fila[8]*custo_max_ore-fila[4]*(fila[8]-1)))
+		[[ fila[1] -ge $((fila[8]*custo_max_clay-fila[5]*(fila[8]-1))) ]] \
+			&& fila[1]=$((fila[8]*custo_max_ore-fila[5]*(fila[8]-1)))
+		[[ fila[2] -ge $((fila[8]*custo_max_obsidian-fila[6]*(fila[6]-1))) ]] \
+			&& fila[2]=$((fila[8]*custo_max_ore-fila[6]*(fila[8]-1)))
+
+
+		[[ " ${visitado[@]} " =~ " ${atual[@]} " ]] && continue
+
+		visitado+=("${atual[@]}")
 		echo "antes da coleta: ${atual[@]} -> $melhor_valor -> ${#fila[@]}"
 
 		local coleta[0]=$(( atual[0] + atual[4] ))
@@ -103,11 +124,13 @@ calcula_qualidade() {
 			continue
 		fi
 			
-		# Compra obsidian
+		# Compra robo obsidian
 		if [[ atual[0] -ge custo_obsidian_ore \
 			&& atual[1] -ge custo_obsidian_clay \
 			&& atual[6] -lt custo_max_obsidian \
-			&& $(( atual[9] & 1 )) -ne 1 ]]
+			&& $(( atual[9] & 1 )) -ne 1 \
+			&& $(( custo_max_obsidian * atual[8] )) -gt \
+			$(( atual[2] + atual[6] * atual[8] )) ]]
 		then
 			compra=("${coleta[@]}")
 			compra[0]=$(( compra[0] - custo_obsidian_ore ))
@@ -124,7 +147,9 @@ calcula_qualidade() {
 		# Compra clay
 		if [[ atual[0] -ge custo_clay \
 			&& atual[5] -lt custo_max_clay \
-			&& $(( atual[9] & 2 )) -ne 2 ]]
+			&& $(( atual[9] & 2 )) -ne 2 \
+			&& $(( custo_max_clay * atual[8] )) -gt \
+			$(( atual[1] + atual[5] * atual[8] )) ]]
 		then
 			compra=("${coleta[@]}")
 			compra[0]=$(( compra[0] - custo_clay ))
@@ -140,7 +165,9 @@ calcula_qualidade() {
 		# Compra ore
 		if [[ atual[0] -ge custo_ore \
 			&& atual[4] -lt custo_max_ore \
-			&& $(( atual[9] & 4 )) -ne 4 ]]
+			&& $(( atual[9] & 4 )) -ne 4 \
+			&& $(( custo_max_ore * atual[8] )) -gt \
+			$(( atual[0] + atual[4] * atual[8] )) ]]
 		then
 			compra=("${coleta[@]}")
 			compra[0]=$(( compra[0] - custo_ore ))
