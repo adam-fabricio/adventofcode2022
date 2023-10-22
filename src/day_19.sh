@@ -80,12 +80,14 @@ calcula_qualidade() {
 		# caso de ter pelo menos 1 robo de geode quebrado
 		#[[ fila[7] -eq 0	
 		#  caso seja repitido o caso
-		[[ fila[0] -ge $((fila[8]*custo_max_ore-fila[4]*(fila[8]-1))) ]] \
-			&& fila[0]=$((fila[8]*custo_max_ore-fila[4]*(fila[8]-1)))
-		[[ fila[1] -ge $((fila[8]*custo_max_clay-fila[5]*(fila[8]-1))) ]] \
-			&& fila[1]=$((fila[8]*custo_max_ore-fila[5]*(fila[8]-1)))
-		[[ fila[2] -ge $((fila[8]*custo_max_obsidian-fila[6]*(fila[6]-1))) ]] \
-			&& fila[2]=$((fila[8]*custo_max_ore-fila[6]*(fila[8]-1)))
+		[[ atual[0] -ge $((atual[8]*custo_max_ore-autal[4]*(autal[8]-1))) ]] \
+			&& atual[0]=$((atual[8]*custo_max_ore-atual[4]*(atual[8]-1))) && \
+		echo "ore = ${atual[0]}"
+		[[ atual[1] -ge $((atual[8]*custo_max_clay-atual[5]*(atual[8]-1))) ]] \
+			&& atual[1]=$((atual[8]*custo_max_clay-atual[5]*(atual[8]-1)))
+		[[ atual[2] -ge \
+			$((atual[8]*custo_max_obsidian-atual[6]*(atual[6]-1))) ]] \
+			&& atual[2]=$((atual[8]*custo_max_obsidian-atual[6]*(atual[8]-1)))
 
 
 		[[ " ${visitado[@]} " =~ " ${atual[@]} " ]] && continue
