@@ -47,7 +47,6 @@ move_item(){
 #-----------------------------------main--------------------------------------#
 #  tamanho da lista
 #  iterar sobre os itens da lista
-p=0
 for (( mix = 0; mix < mix_times; mix++ )); do
 	for (( i = 0; i < lenght; i++ )); do
 		#  find next value to mix
@@ -61,8 +60,6 @@ for (( mix = 0; mix < mix_times; mix++ )); do
 		# if number is 0 do not move
 		[[ value -eq 0 ]] && continue
 		move_item
-		echo $p
-		let p++
 	done
 done
 
