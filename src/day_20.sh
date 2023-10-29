@@ -27,12 +27,10 @@ done < "$data_input"
 #-----------------------------------functions---------------------------------#
 move_item(){
 	position=$i
-	normalized_value=$(( value % ( lenght - 1 )  ))
-	[[ value -lt 0 ]] && normalized_value=$(( lenght + normalized_value -1))
-	new_position=$(( position + normalized_value))
-	if [[ new_position -ge $(($lenght)) && value -gt 0 ]]; then
-		new_position=$((new_position%(lenght) +1 ))
-	fi
+	
+	
+	new_position=$(( ( value + position ) % ( lenght - 1 )  ))
+	[[ new_position -lt 0 ]] && new_position=$(( new_position + lenght - 1 ))
 
 	#  move o valor
 	#  remove item of list
@@ -47,11 +45,9 @@ lenght=${#list[@]}
 
 #  iterar sobre os itens da lista
 
-p=0
 
 for (( i = 0; i < lenght; i++ )); do
 	IFS="|" read value flag <<< ${list[$i]}
-	echo $i
 	#  if number is alredy moved continue
 	[[ flag -eq 0 ]] && continue
 	#  set item as read
@@ -61,16 +57,15 @@ for (( i = 0; i < lenght; i++ )); do
 	[[ value -eq 0 ]] && continue
 	move_item
 	let i--
-	[[ p -eq 0 ]] && declare -p list && let p++
-	let p++
+	#declare -p list
 done
-echo $p
+
 for (( i = 0; i < lenght; i++ )); do
 	IFS="|" read value flag <<< ${list[$i]}
 	[[ value -eq 0 ]] && id0=$i && break
 done
 
-declare -p list
+
 echo "id0=$id0"
 results=( ${list[$(((id0+1000)%lenght))]%|*} \
 	${list[$(((id0+2000)%lenght))]%|*} \
