@@ -18,46 +18,52 @@ fi
 #----------------------------------Read data input----------------------------#
 declare -a list
 declare -i line_number=1
+part=2
+idx=0
+key=811589153
+[[ part -eq 1 ]] && mix_times=1 || mix_times=10
 
 while read line
 do
 	#  cria lista
-	list+=("$line|1")
+	[[ part -eq 2 ]] && line=$(( line * key ))
+	list+=("$line|$idx")
+	let idx++
 done < "$data_input"
+
+
+lenght=${#list[@]}
 #-----------------------------------functions---------------------------------#
 move_item(){
-	position=$i
-	
-	
+	position=$j
 	new_position=$(( ( value + position ) % ( lenght - 1 )  ))
 	[[ new_position -lt 0 ]] && new_position=$(( new_position + lenght - 1 ))
-
 	#  move o valor
 	#  remove item of list
 	list=(${list[@]::$position} ${list[@]:$((position+1))})
 	#  add item to list
-	list=(${list[@]::$new_position} "$value|$flag" ${list[@]:$new_position})
-
+	list=(${list[@]::$new_position} "$value|$idx" ${list[@]:$new_position})
 }
 #-----------------------------------main--------------------------------------#
 #  tamanho da lista
-lenght=${#list[@]}
-
 #  iterar sobre os itens da lista
-
-
-for (( i = 0; i < lenght; i++ )); do
-	IFS="|" read value flag <<< ${list[$i]}
-	#  if number is alredy moved continue
-	[[ flag -eq 0 ]] && continue
-	#  set item as read
-	flag=0
-	list[$i]="$value|$flag"
-	# if number is 0 do not move
-	[[ value -eq 0 ]] && continue
-	move_item
-	let i--
-	#declare -p list
+p=0
+for (( mix = 0; mix < mix_times; mix++ )); do
+	for (( i = 0; i < lenght; i++ )); do
+		#  find next value to mix
+		for (( j = 0; j < lenght; j++)); do
+			IFS="|" read _ idx <<< ${list[$j]}
+			[[ i -eq idx ]] && break
+		done
+		IFS="|" read value _ <<< ${list[$j]}
+		#declare -p list
+		#echo $value $j
+		# if number is 0 do not move
+		[[ value -eq 0 ]] && continue
+		move_item
+		echo $p
+		let p++
+	done
 done
 
 for (( i = 0; i < lenght; i++ )); do
@@ -80,3 +86,7 @@ done
 echo "result= $sum_result"
 
 
+#for (( i = 0; i < lenght; i++ )); do
+#	IFS="|" read value flag <<< ${list[$i]}
+#	echo "$value"
+#done
