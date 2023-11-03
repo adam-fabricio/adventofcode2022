@@ -7,6 +7,44 @@
 #    1698894485 -> 02/11/23 00:08:05
 #
 #----------------------------------Data input---------------------------------#
+#---------------------------------spin function-------------------------------#
+
+spin(){
+	local lin=${direction[0]}
+	local col=${direction[1]}
+
+	case $instruction in 
+		"R")
+			direction[0]=$(( col ))
+			direction[1]=$(( -1 * lin ))
+			;;
+		"L")
+			direction[0]=$(( -1 * col ))
+			direction[1]=$(( lin ))
+			;;
+	esac
+}
+
+#---------------------------------move function-------------------------------#
+move(){
+	for (( i = 0; i < instruction; i++ )); do
+		new_row=$(( position[0] + direction[0] ))
+		new_col=$(( position[1] + direction[1] ))
+		[[ $new_col -eq ${#line[$new_row]} ]] && new_col=${start_col[$new_row]}
+		[[ $new_row -eq ${end_row[$new_col]} ]] && new_row=${start_row[$new_col]}
+			
+
+		if [[ ${abs_map["$new_row $new_col"]} == "#" ]]; then
+			break
+		else
+			position=( $new_row $new_col )
+		fi
+	done
+	#declare -p position
+
+}
+
+#--------------------------------------|--------------------------------------#
 if [[ "$1" == test ]]
 then
     data_input="data/day_22_test"
@@ -16,7 +54,6 @@ else
     echo "use source data input"
 fi
 #----------------------------------Read data input----------------------------#
-declare -a directions
 declare -A abs_map
 declare -A open_tiles
 declare -A solid_wall
@@ -31,23 +68,40 @@ do
     let line_number++
 done < "$data_input"
 
-while read -r -a temp_directions; do
-	directions+=( "$temp_directions" )
-done <<< $(echo ${line[-1]} | grep -oP '\d+|\D+')
-
 for (( row = 0; row < ((${#line[@]} - 2)); row++ )); do
 	for (( col = 0; col < ${#line[row]} ; col++ )); do
 		abs_map["$row $col"]="${line[row]:$col:1}"
 		if [[ "${line[row]:$col:1}" == "." ]]; then
 			open_tiles["$row $col"]=1
+			[[ -z "${start_col[$row]}" ]] && start_col[$row]=$col
+			[[ -z "${start_row[$col]}" ]] && start_row[$col]=$row
 		elif [[ "${line[row]:$col:1}" == "#" ]]; then
+			[[ -z "${start_col[$row]}" ]] && start_col[$row]=$col
+			[[ -z "${start_row[$col]}" ]] && start_row[$col]=$row
 			solid_wall["$row $col"]=1
 		else
 			empty["$row $col"]=1
+			[[ -v start_row[$col] && -z "${end_row[$col]}"  ]] \
+				&& end_row[$col]=$row
 		fi
 	done
 done
-declare -p abs_map open_tiles solid_wall empty directions
+#declare -p start_row end_row
+#  starting position. ( row collumm )
+col=0
+while :
+do
+	[[ ${abs_map["0 $col"]} == "." ]] && position=( 0 $col ) && break
+	let col++
+done
 
+#  starting direction ( vertical horizontal )
+direction=( 0 1 )
+
+while read -r -a instruction; do
+	[[ $instruction =~ ^[0-9]+$ ]] && move || spin
+done <<< $(echo ${line[-1]} | grep -oP '\d+|\D+')
+
+declare -p position direction
 
 #--------------------------------------|--------------------------------------#
