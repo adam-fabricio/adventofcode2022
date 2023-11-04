@@ -8,11 +8,9 @@
 #
 #----------------------------------Data input---------------------------------#
 #---------------------------------spin function-------------------------------#
-
 spin(){
 	local lin=${direction[0]}
 	local col=${direction[1]}
-
 	case $instruction in 
 		"R")
 			direction[0]=$(( col ))
@@ -23,24 +21,75 @@ spin(){
 			direction[1]=$(( lin ))
 			;;
 	esac
+	#echo "spin ${direction[@]}"
 }
 
 #---------------------------------move function-------------------------------#
 move(){
-	for (( i = 0; i < instruction; i++ )); do
-		new_row=$(( position[0] + direction[0] ))
-		new_col=$(( position[1] + direction[1] ))
-		[[ $new_col -eq ${#line[$new_row]} ]] && new_col=${start_col[$new_row]}
-		[[ $new_row -eq ${end_row[$new_col]} ]] && new_row=${start_row[$new_col]}
-			
+	[[ direction[0] -eq 0 ]] && move_col || move_row
+}
 
-		if [[ ${abs_map["$new_row $new_col"]} == "#" ]]; then
-			break
-		else
-			position=( $new_row $new_col )
-		fi
+#--------------------------------function move row----------------------------#
+move_row(){
+	
+	# slice col
+	sliced_col=""
+	for (( i=0; i<=${#line[@]}; i++ )); do
+		case "${line[$i]:${position[1]}:1}" in
+			".") sliced_col+="." ;;
+			"#") sliced_col+="#" ;;
+			*)   sliced_col+=" " ;;
+		esac
 	done
-	#declare -p position
+	
+	position[0]=$( walk "$sliced_col" "${position[0]}" ${direction[0]} )
+
+}
+
+
+#--------------------------------function move col----------------------------#
+move_col(){
+	#echo "a=${line[${position[0]}]} b=${position[1]} c=${direction[1]} d=$instruction"
+	position[1]=$( walk "${line[${position[0]}]}" "${position[1]}" "${direction[1]}" )
+}
+#--------------------------------------|--------------------------------------#
+walk(){
+	#  parameters
+	path="$1"
+	location="$2"
+	step="$3"
+
+	#  remove caracter em branco depois da string	
+	path="${path%"${path##*[![:space:]]}"}"
+
+	#  def upper limit
+	upper_limit=${#path}
+
+	#  def inferior limit
+	for ((i=0; i<$upper_limit; i++)); do
+		[[ ! "${path:$i:1}" == " " ]] && inf_limit=$i && break
+	done
+
+	for (( i = 0; i < instruction; i++ )); do
+		#  verify next step
+		new_location=$(( location + step ))
+		
+		#  if end go to init
+		if [[ new_location -eq upper_limit ]]; then
+		   new_location=$inf_limit
+		
+		#  if min go to end
+		elif [[ new_location -eq $(( inf_limit - 1 )) ]]; then
+			new_location=$(( upper_limit - 1 ))
+		fi
+
+		# if wall stop
+		[[ "${path:$new_location:1}" == "#" ]] && break
+		
+		#  do step
+		location=$new_location
+	done
+	echo $location
 
 }
 
@@ -54,54 +103,40 @@ else
     echo "use source data input"
 fi
 #----------------------------------Read data input----------------------------#
-declare -A abs_map
-declare -A open_tiles
-declare -A solid_wall
-declare -A empty
 line_number=1
 
 mapfile -t line < "$data_input"
 
-for (( i = 0; i < "${#line[@]}"; i++ ))
-do
-	printf "%02d -> %s\n" $line_number "${line[i]}"
-    let line_number++
-done < "$data_input"
-
-for (( row = 0; row < ((${#line[@]} - 2)); row++ )); do
-	for (( col = 0; col < ${#line[row]} ; col++ )); do
-		abs_map["$row $col"]="${line[row]:$col:1}"
-		if [[ "${line[row]:$col:1}" == "." ]]; then
-			open_tiles["$row $col"]=1
-			[[ -z "${start_col[$row]}" ]] && start_col[$row]=$col
-			[[ -z "${start_row[$col]}" ]] && start_row[$col]=$row
-		elif [[ "${line[row]:$col:1}" == "#" ]]; then
-			[[ -z "${start_col[$row]}" ]] && start_col[$row]=$col
-			[[ -z "${start_row[$col]}" ]] && start_row[$col]=$row
-			solid_wall["$row $col"]=1
-		else
-			empty["$row $col"]=1
-			[[ -v start_row[$col] && -z "${end_row[$col]}"  ]] \
-				&& end_row[$col]=$row
-		fi
-	done
-done
-#declare -p start_row end_row
+# for (( i = 0; i < "${#line[@]}"; i++ ))
+# do
+# 	printf "%02d -> %s\n" $line_number "${line[i]}"
+#     let line_number++
+# done < "$data_input"
+ 
 #  starting position. ( row collumm )
-col=0
-while :
-do
-	[[ ${abs_map["0 $col"]} == "." ]] && position=( 0 $col ) && break
-	let col++
+for (( i = 0; i < ${#line[0]}; i++ )); do
+	[[ ${line[0]:$i:1} == "." ]] && position=( 0 $i ) && break
 done
 
 #  starting direction ( vertical horizontal )
 direction=( 0 1 )
-
+#set -x
 while read -r -a instruction; do
 	[[ $instruction =~ ^[0-9]+$ ]] && move || spin
+	[[ position[1] -lt 0 || position[0] -lt 0 ]] && exit
 done <<< $(echo ${line[-1]} | grep -oP '\d+|\D+')
 
 declare -p position direction
+
+case "${direction[@]}" in
+	"0 1") val_dir=0 ;;
+	"1 0") val_dir=1 ;;
+	"0 -1") val_dir=2 ;;
+	"-1 0") val_dir=3 ;;
+esac
+
+result=$(( 1000 * ( position[0] + 1 ) + 4 * ( position[1] + 1 ) + val_dir ))
+echo "result=$result"
+
 
 #--------------------------------------|--------------------------------------#
