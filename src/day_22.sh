@@ -11,7 +11,7 @@
 spin(){
 	local lin=${direction[0]}
 	local col=${direction[1]}
-	case $instruction in 
+	case $instruction in
 		"R")
 			direction[0]=$(( col ))
 			direction[1]=$(( -1 * lin ))
@@ -21,43 +21,54 @@ spin(){
 			direction[1]=$(( lin ))
 			;;
 	esac
+	change_direction=0
 	#echo "spin ${direction[@]}"
-}
-
-#---------------------------------move function-------------------------------#
-move(){
-	[[ direction[0] -eq 0 ]] && move_col || move_row
 }
 
 #--------------------------------function move row----------------------------#
 move_row(){
 	
 	# slice col
-	sliced_col=""
+	path=""
 	for (( i=0; i<=${#line[@]}; i++ )); do
 		case "${line[$i]:${position[1]}:1}" in
-			".") sliced_col+="." ;;
-			"#") sliced_col+="#" ;;
-			*)   sliced_col+=" " ;;
+			".") path+="." ;;
+			"#") path+="#" ;;
+			*)   path+=" " ;;
 		esac
 	done
 	
-	position[0]=$( walk "$sliced_col" "${position[0]}" ${direction[0]} )
-
+	change_direction=1
+	#  location="${position[0]}"
+	#  step="${direction[0]}"
+	ref=0
+	#position[0]=$( walk "$sliced_col" "${position[0]}" ${direction[0]} )
 }
 
 
 #--------------------------------function move col----------------------------#
 move_col(){
-	#echo "a=${line[${position[0]}]} b=${position[1]} c=${direction[1]} d=$instruction"
-	position[1]=$( walk "${line[${position[0]}]}" "${position[1]}" "${direction[1]}" )
+	path="${line[${position[0]}]}"
+	change_direction=1
+	#  location="${position[1]}"
+	#  step="${direction[1]}"
+	ref=1
+	#position[1]=$( walk "${line[${position[0]}]}" "${position[1]}" "${direction[1]}" )
 }
 #--------------------------------------|--------------------------------------#
 walk(){
 	#  parameters
-	path="$1"
-	location="$2"
-	step="$3"
+
+	if [[ change_direction -eq 0 ]]; then
+	   if [[ direction[0] -eq 0 ]]; then
+		  move_col
+	  else
+		  move_row
+	   fi
+	fi
+	
+	#location="$2"
+	#step="$3"
 
 	#  remove caracter em branco depois da string	
 	path="${path%"${path##*[![:space:]]}"}"
@@ -72,7 +83,7 @@ walk(){
 
 	for (( i = 0; i < instruction; i++ )); do
 		#  verify next step
-		new_location=$(( location + step ))
+		new_location=$(( position[ref] + direction[ref] ))
 		
 		#  if end go to init
 		if [[ new_location -eq upper_limit ]]; then
@@ -87,9 +98,8 @@ walk(){
 		[[ "${path:$new_location:1}" == "#" ]] && break
 		
 		#  do step
-		location=$new_location
+		position[ref]=$new_location
 	done
-	echo $location
 
 }
 
@@ -120,9 +130,8 @@ done
 
 #  starting direction ( vertical horizontal )
 direction=( 0 1 )
-#set -x
 while read -r -a instruction; do
-	[[ $instruction =~ ^[0-9]+$ ]] && move || spin
+	[[ $instruction =~ ^[0-9]+$ ]] && walk || spin
 	[[ position[1] -lt 0 || position[0] -lt 0 ]] && exit
 done <<< $(echo ${line[-1]} | grep -oP '\d+|\D+')
 
